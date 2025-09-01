@@ -119,7 +119,7 @@
 ! parameters
 	lb = InD(6)
 	virialisation = int(InD(7))
-	option = int(Ind(8))
+	option = int(InD(8))
         collapse = .false.
 	
 ! time of integration, and other time instants:
