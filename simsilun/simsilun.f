@@ -141,15 +141,15 @@
 	Xii= X
 
 ! integration steps (see also get_parameters for options 1 and 2)
-	if(option.eq.1) then
+	if(option==1) then
         dt = dabs(1d-3/(X(2) + 0.33*X(3)))
 	Nf = 1000*int(1000.0*tevo*(X(2) + 0.33*X(3)))
 	endif
-	if(option.eq.2) then
+	if(option==2) then
 	Nf = 350000
 	dt = tevo/(1.0d0*Nf)
 	endif
-	if(option.ne.1 .and. option.ne.2) then	
+	if(option/=1 .and. option/=2) then
 	print *, 'please specify the *option* for the time step'
 	print *, '---calculations are being aborted---'
 	stop
@@ -161,8 +161,8 @@
 ! evolution
       do I=1,Nf
 
-	if(option.eq.1) dt = dabs(1d-3/(X(2) + X(3)/3.0d0))
-	if(option.eq.2) dt = tevo/(1.0d0*Nf)
+	if(option==1) dt = dabs(1d-3/(X(2) + X(3)/3.0d0))
+	if(option==2) dt = tevo/(1.0d0*Nf)
 
         cti = cti + dt
 	     
@@ -188,15 +188,15 @@
               enddo
 
 ! check for the collapse and apply virialisation if necessary
-        if(X(2).le.0.0d0) collapse = .true.
+        if(X(2)<=0.0d0) collapse = .true.
 	if(collapse) then
 
-		if(virialisation.eq.1) then
+		if(virialisation==1) then
                 X(2) = 0.0d0
 		goto 102
 		endif
 
-		if(virialisation.eq.2) then
+		if(virialisation==2) then
  	        if(isnan(X(1)) .or. isnan(X(2))) then
 		  X = Xii
                   X(2) = 0.0d0
@@ -204,7 +204,7 @@
 		  endif
 		endif
 
-		if(virialisation.eq.3) then
+		if(virialisation==3) then
 		X(1) = (InD(5)*60.0d0)
 		X(2) = 0.0d0
 		X(3) = 0.0d0
@@ -220,8 +220,8 @@
 	xp2 = xp3
 	xp3 = cti 
 	xp  = ctf
-        if(cti.eq.ctf) goto 102	
-        if(cti.gt.ctf) then
+        if(cti==ctf) goto 102
+        if(cti>ctf) then
   	   yp1 = Xii
 	   yp2 = Xi
 	   yp3 = X
@@ -236,8 +236,8 @@
 
 	RK = 0.0d0
       enddo
-	if(option.eq.2) goto 102
-	if(Nq.ge.10) then
+	if(option==2) goto 102
+	if(Nq>=10) then
  	  print *, 'cannot converge with the evolution, please:'
 	  print *, '1. change the time step to *option 2*,'
 	  print *, '2. check your initial conditions, and'
@@ -245,7 +245,7 @@
 	  print *, '---calculations are being aborted---'
 	  stop
 	endif	
-	if(cti.lt.ctf) then
+	if(cti<ctf) then
 	Nq = Nq + 1
 	goto 101
 	endif
@@ -285,7 +285,7 @@
 	call get_parameters(szpar)
 
    	lb = szpar(7) 
-	if(lb.eq.0d0) then
+	if(lb==0d0) then
 	print *, 'Lambda cannot be zero'
 	print *, 'if you want to use models with Lambda=0'
 	print *, 'then rewrite the subroutine *timelcdm* '
@@ -316,7 +316,7 @@
 	omega_matter = 0.308
 	omega_lambda = 1.0 - omega_matter
 	H0 = 67.810d0
-	  if(omega_lambda.ne.(1.0 - omega_matter)) then
+	  if(omega_lambda/=(1.0 - omega_matter)) then
 	   print *, 'The code uses the LCDM model to set up '
 	   print *, ' the initial conditions '
 	   print *, 'if you want to use non-LCDM models '
