@@ -18,7 +18,7 @@
 ! expansion and shear are x 1/c
 
 
-	integer, parameter :: Ni = 2000  ! dimension of the initial data vector - for single value Ni = 1
+	integer, parameter :: Ni = 64*64  ! dimension of the initial data vector - for single value Ni = 1
         double precision Din(Ni),dini ! initial density contrast 
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
 
@@ -63,6 +63,7 @@
 	double precision InD(10), Din(Ni)
         double precision cpar(30)
         double precision zo,zz,zf,cto,ctf
+        double precision s
 
 ! InD(1) = initial time instant
 ! InD(2) = background's density
@@ -93,7 +94,8 @@
 !Generate a simple example of initial conditions. 
 !Modify this to read in a more realistic set of initial conditions, e.g. from the Millenium simulation initial conditions as in arXiv:1708.09143
 	do I=1,Ni
-	Din(I) = -0.00095+0.000001*I
+        call random_number(s)   ! s will be filled with uniform [0,1)
+        Din(i) = s * 0.001 - 0.0005
 	enddo
 
 ! other parameters
