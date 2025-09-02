@@ -13,7 +13,7 @@ plt.rc('figure', titlesize=16)  # fontsize of the figure title
 
 # Defining constants (from https://arxiv.org/pdf/1308.6731.pdf)
 k_max = 2e-7
-r_b = 30.0  # Boundary of void [Mpc]
+r_b = 32.0  # Boundary of void [Mpc]
 
 m = 4
 n = 4
@@ -83,8 +83,8 @@ warnings.filterwarnings('ignore')
 g_size = 64
 scale = 1
 coords = (np.arange(g_size) - (g_size-1)/2) * scale
-X, Y = np.meshgrid(coords, coords)
-rad = np.sqrt(X**2 + Y**2)
+X, Y, Z = np.meshgrid(coords, coords, coords)
+rad = np.sqrt(X**2 + Y**2 + Z**2)
 
 
 # Preallocate grid
@@ -98,19 +98,23 @@ def safe_rho(r, i):
 
 
 # Element-wise evaluation
-timestep = 4
+timestep = 0
 for ix in range(g_size):
     for iy in range(g_size):
-        grid[ix, iy] = safe_rho(rad[ix,iy], timestep) / rho_eds(timestep)
+        for iz in range(g_size):
+            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
 
-
-
+grid_v = grid.reshape(64*64*64)
+print(grid_v)
+grid = grid_v.reshape(64,64,64)
 # plotting
 plt.figure(figsize=(6,6))
-im = plt.imshow(grid, origin='lower',
+im = plt.imshow(grid[:,:,32], origin='lower',
                 extent=[coords.min(), coords.max(), coords.min(), coords.max()])
 plt.colorbar(im, label=r'$\rho / \rho_{\mathrm{EdS}}$')
 plt.xlabel("x")
 plt.ylabel("y")
 plt.title("LTB density slice")
 plt.show()
+
+np.savetxt("grid", grid_v)
