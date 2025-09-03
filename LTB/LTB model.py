@@ -98,15 +98,15 @@ def safe_rho(r, i):
 
 
 # Element-wise evaluation
-timestep = 0
+timestep = 4
 for ix in range(g_size):
     for iy in range(g_size):
         for iz in range(g_size):
             grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
 
-grid_v = grid.reshape(64*64*64)
-print(grid_v)
-grid = grid_v.reshape(64,64,64)
+#grid_v = grid.reshape(64*64*64)
+#print(grid_v)
+#grid = grid_v.reshape(64,64,64)
 # plotting
 plt.figure(figsize=(6,6))
 im = plt.imshow(grid[:,:,32], origin='lower',
@@ -117,4 +117,4 @@ plt.ylabel("y")
 plt.title("LTB density slice")
 plt.show()
 
-np.savetxt("grid", grid_v)
+#np.savetxt("grid", grid_v)

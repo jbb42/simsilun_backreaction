@@ -100,7 +100,7 @@
 
             do i = 1, Ni
                 read(10, *) Din(i)
-                Din(i) = Din(i)-1.0
+                Din(i) = (Din(i)-1.0)*0.1
         end do
 
         close(10)
@@ -362,7 +362,7 @@
 ! for option 2 ("collapsed"), please use either a fixed step (option 2 below), or please decrease the time step -- with default setting the results may not be accurate 
 
 ! fix vs dynamical time step: 1=dynamical, 2=fixed
-	cpar(11) = 2.d0
+	cpar(11) = 1.d0
 ! dynamical step does not work well for some extreme cases
 ! so always test if this choice works well with your system
 
