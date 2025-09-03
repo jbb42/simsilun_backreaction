@@ -31,7 +31,7 @@ t_i = t_0 * a_i ** (3 / 2)  # Initial time [Gyr]
 
 # Time
 Nt = 5
-t = np.array([0.002, 0.01, 0.05, 0.2, 1])*t_0
+t = np.array([0.0017, 0.002, 0.05, 0.7, 1])*t_0
 
 """Functions"""
 def M(r):
@@ -117,4 +117,4 @@ plt.ylabel("y")
 plt.title("LTB density slice")
 plt.show()
 
-#np.savetxt("grid", grid_v)
+#np.savetxt("../simsilun/grid", grid_v)

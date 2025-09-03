@@ -75,7 +75,7 @@
 
 
 ! initial values: redshift, time instant, density, and expansion rate (the LCDM model assumed)
-	zo = 1090.0d0
+	zo = 80!1090.0d0
 	zz = (zo+1.0d0)
 	call timelcdm(zo,cto)
 	InD(1) = cto
@@ -100,7 +100,7 @@
 
             do i = 1, Ni
                 read(10, *) Din(i)
-                Din(i) = (Din(i)-1.0)*0.1
+                Din(i) = Din(i)-1.0
         end do
 
         close(10)
