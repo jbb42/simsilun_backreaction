@@ -18,7 +18,7 @@
 ! expansion and shear are x 1/c
 
 
-	integer, parameter :: Ni = 64*64*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
+	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
         double precision Din(Ni),dini ! initial density contrast 
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
 
@@ -75,7 +75,7 @@
 
 
 ! initial values: redshift, time instant, density, and expansion rate (the LCDM model assumed)
-	zo = 80!1090.0d0
+	zo = 80.0!1090.0d0
 	zz = (zo+1.0d0)
 	call timelcdm(zo,cto)
 	InD(1) = cto
@@ -83,11 +83,22 @@
 	InD(3) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
   
 ! final time instants
-	zf = 0.0
+	zf = 0.01!0.0
         call timelcdm(zf,ctf)
 	InD(4) = ctf
 	zz = (zf+1.0d0)
 	InD(5) = cpar(5)*(zz**3)
+
+
+        ! inside initial_data just after InD values set:
+        print *, 'DEBUG: zo = ', zo
+        print *, 'DEBUG: cto (InD(1)) = ', InD(1)
+        print *, 'DEBUG: background density InD(2) = ', InD(2)
+        print *, 'DEBUG: background expansion InD(3) = ', InD(3)
+        print *, 'DEBUG: zf = ', zf
+        print *, 'DEBUG: ctf (InD(4)) = ', InD(4)
+        print *, 'DEBUG: final background density InD(5) = ', InD(5)
+
 
 ! initial vector with density contrasts
 !Generate a simple example of initial conditions. 
@@ -110,6 +121,7 @@
 	InD(8) = cpar(11)
 
 	end
+
 
 !=====================================================
 
@@ -321,9 +333,9 @@
 	pi = 4d0*datan(1.0d0)
 
 ! cosmological parameters / Planck 2015 (TT+lowP+lensing)
-	omega_matter = 0.308
+	omega_matter = 0.999!0.308
 	omega_lambda = 1.0 - omega_matter
-	H0 = 67.810d0
+	H0 = 70!67.810d0
 	  if(omega_lambda/=(1.0 - omega_matter)) then
 	   print *, 'The code uses the LCDM model to set up '
 	   print *, ' the initial conditions '
@@ -354,7 +366,7 @@
 	cpar(5) = gkr
 	cpar(6) = cs
 	cpar(7) = lb
-	cpar(8) = pi	
+	cpar(8) = pi
 	cpar(9) = kapc2
 
 ! virialisation type: 1=turnaround, 2=near singularity, 3=stable halo

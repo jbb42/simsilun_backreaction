@@ -1,37 +1,37 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
-
-plt.rc('axes', titlesize=16)  # fontsize of the axes title
-plt.rc('axes', labelsize=16)  # fontsize of the x and y labels
-plt.rc('xtick', labelsize=14)  # fontsize of the tick labels
-plt.rc('ytick', labelsize=14)  # fontsize of the tick labels
-plt.rc('legend', fontsize=13)  # legend fontsize
-plt.rc('figure', titlesize=16)  # fontsize of the figure title
-
 """Constants"""
-
-# Defining constants (from https://arxiv.org/pdf/1308.6731.pdf)
-k_max = 2e-7
-r_b = 32.0  # Boundary of void [Mpc]
-
+# Defining constants
+k_max = 2e-13#2e-7 # why 1e-6 times original??
+r_b = 32.0
 m = 4
 n = 4
-
 small = 1e-3  # do not make smaller
 
-H_0 = 71.58781594e-3  # Hubble constant [1/Gyr]
-c = 306.5926758  # Speed of light [Mpc/Gyr]
-G = 4.498234911e-15  # G in Mpc^3/(M_sun*Gyr^2)
+mu=1.989e45
+lu=3.085678e19
+tu=31557600e6
+
+G = 6.6742e-11*((mu*(tu**2))/(lu**3))
+c = 299792458*(tu/lu)
+H0 = 70 # km/s/Mpc
+H_0=(tu/lu)*H0
+t_0 = (2 / 3) * (1 / H_0)  # Present time
 
 # Initial time values
-a_i = 1 / 1000  # Initial scale factor (CMB)
-t_0 = (2 / 3) * (1 / H_0)  # Present time [Gyr]
-t_i = t_0 * a_i ** (3 / 2)  # Initial time [Gyr]
+z_i = 80
+a_i = 1 / (1+z_i)  # Initial scale factor
+t_i = t_0 * a_i ** (3 / 2)  # Initial time
 
+z_f = 0.01
+a_f = 1 / (1+z_f)  # Final scale factor
+t_f = t_0 * a_f ** (3 / 2)  # Final time
+print(t_i, t_f, t_0)
 # Time
-Nt = 5
-t = np.array([0.0017, 0.002, 0.05, 0.7, 1])*t_0
+t = np.array([t_i, t_f])
+
+timestep = 1
 
 """Functions"""
 def M(r):
@@ -83,10 +83,10 @@ warnings.filterwarnings('ignore')
 g_size = 64
 scale = 1
 coords = (np.arange(g_size) - (g_size-1)/2) * scale
-X, Y, Z = np.meshgrid(coords, coords, coords)
-rad = np.sqrt(X**2 + Y**2 + Z**2)
-
-
+#X, Y, Z = np.meshgrid(coords, coords, coords)
+X, Y = np.meshgrid(coords, coords)
+#rad = np.sqrt(X**2 + Y**2 + Z**2)
+rad = np.sqrt(X**2 + Y**2)
 # Preallocate grid
 grid = np.empty_like(rad)
 
@@ -98,18 +98,19 @@ def safe_rho(r, i):
 
 
 # Element-wise evaluation
-timestep = 4
 for ix in range(g_size):
     for iy in range(g_size):
-        for iz in range(g_size):
-            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
+        grid[ix, iy] = safe_rho(rad[ix, iy], timestep) / rho_eds(timestep)
+#        for iz in range(g_size):
+#            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
 
 #grid_v = grid.reshape(64*64*64)
+grid_v = grid.reshape(64*64)
 #print(grid_v)
 #grid = grid_v.reshape(64,64,64)
 # plotting
 plt.figure(figsize=(6,6))
-im = plt.imshow(grid[:,:,32], origin='lower',
+im = plt.imshow(grid[:,:], origin='lower',
                 extent=[coords.min(), coords.max(), coords.min(), coords.max()])
 plt.colorbar(im, label=r'$\rho / \rho_{\mathrm{EdS}}$')
 plt.xlabel("x")
@@ -117,4 +118,5 @@ plt.ylabel("y")
 plt.title("LTB density slice")
 plt.show()
 
-#np.savetxt("../simsilun/grid", grid_v)
+if timestep == 0:
+    np.savetxt("../simsilun/grid", grid_v)
