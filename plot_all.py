@@ -1,11 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import subprocess
-from LTB.LTB_model import evolve_LTB as evolve_LTB
+from LTB_model import evolve_LTB as evolve_LTB
 
 z_i = 80    # Initial redshift
 z_f = 0     # Final redshift
-H_0 = 70    # Hubble constant
+H_0 = 70    # Hubble constant [km/s/Mpc]
 
 def plot_universe(grid, coords, posx, posy, title):
     ax = axes[posy, posx]  # upper-left subplot

@@ -338,7 +338,7 @@
 	pi = 4d0*datan(1.0d0)
 
 ! cosmological parameters / Planck 2015 (TT+lowP+lensing)
-	omega_matter = 0.999!0.308
+	omega_matter = 0.99999!0.308
 	omega_lambda = 1.0 - omega_matter
 	!H0 = 70!67.810d0
 	  if(omega_lambda/=(1.0 - omega_matter)) then

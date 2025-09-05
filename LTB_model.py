@@ -94,12 +94,3 @@ def evolve_LTB(timestep, z_i, z_f, H_0):
     #        for iz in range(g_size):
     #            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
     return grid, coords
-
-#grid_v = grid.reshape(64*64*64)
-#grid_v = grid.reshape(64*64)
-#print(grid_v)
-#grid = grid_v.reshape(64,64,64)
-# plotting
-
-#if timestep == 0:
-#    np.savetxt("../simsilun/grid", grid_v)
