@@ -15,30 +15,13 @@ tu=31557600e6
 
 G = 6.6742e-11*((mu*(tu**2))/(lu**3))
 c = 299792458*(tu/lu)
-H0 = 70 # km/s/Mpc
-H_0=(tu/lu)*H0
-t_0 = (2 / 3) * (1 / H_0)  # Present time
-
-# Initial time values
-z_i = 80
-a_i = 1 / (1+z_i)  # Initial scale factor
-t_i = t_0 * a_i ** (3 / 2)  # Initial time
-
-z_f = 0.01
-a_f = 1 / (1+z_f)  # Final scale factor
-t_f = t_0 * a_f ** (3 / 2)  # Final time
-print(t_i, t_f, t_0)
-# Time
-t = np.array([t_i, t_f])
-
-timestep = 1
 
 """Functions"""
 def M(r):
-    return 1 / 2 * H_0 ** 2 * (r ** 3) / (c ** 2)
+    return 1 / 2 * H0 ** 2 * (r ** 3) / (c ** 2)
 
 def M_dr(r):
-    return (3 / 2) * ((H_0 ** 2) / (c ** 2)) * r ** 2
+    return (3 / 2) * ((H0 ** 2) / (c ** 2)) * r ** 2
 
 def E(r):
     return np.where(r < r_b, -1 * k_max * r ** 2 * ((r / r_b) ** n - 1) ** m, 0)
@@ -77,19 +60,6 @@ def rho(r, i):
 def rho_eds(i):
     return 3 * c ** 2 * ((2 / (3 * t[i])) ** 2 / (8 * np.pi * G))
 
-import warnings
-warnings.filterwarnings('ignore')
-
-g_size = 64
-scale = 1
-coords = (np.arange(g_size) - (g_size-1)/2) * scale
-#X, Y, Z = np.meshgrid(coords, coords, coords)
-X, Y = np.meshgrid(coords, coords)
-#rad = np.sqrt(X**2 + Y**2 + Z**2)
-rad = np.sqrt(X**2 + Y**2)
-# Preallocate grid
-grid = np.empty_like(rad)
-
 def safe_rho(r, i):
     if r >= r_b*0.99:
         return rho_eds(i)
@@ -98,25 +68,38 @@ def safe_rho(r, i):
 
 
 # Element-wise evaluation
-for ix in range(g_size):
-    for iy in range(g_size):
-        grid[ix, iy] = safe_rho(rad[ix, iy], timestep) / rho_eds(timestep)
-#        for iz in range(g_size):
-#            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
+def evolve_LTB(timestep, z_i, z_f, H_0):
+    global t, t_0, H0
+    H0 = (tu / lu) * H_0
+    t_0 = (2 / 3) * (1 / H0)  # Present time
+    a_i = 1 / (1 + z_i)  # Initial scale factor
+    t_i = t_0 * a_i ** (3 / 2)  # Initial time
+    a_f = 1 / (1 + z_f)  # Final scale factor
+    t_f = t_0 * a_f ** (3 / 2)  # Final time
+    t = np.array([t_i, t_f])
+
+    g_size = 64
+    scale = 1
+    coords = (np.arange(g_size) - (g_size-1)/2) * scale
+    #X, Y, Z = np.meshgrid(coords, coords, coords)
+    X, Y = np.meshgrid(coords, coords)
+    #rad = np.sqrt(X**2 + Y**2 + Z**2)
+    rad = np.sqrt(X**2 + Y**2)
+    # Preallocate grid
+    grid = np.empty_like(rad)
+
+    for ix in range(g_size):
+        for iy in range(g_size):
+            grid[ix, iy] = safe_rho(rad[ix, iy], timestep) / rho_eds(timestep)
+    #        for iz in range(g_size):
+    #            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
+    return grid, coords
 
 #grid_v = grid.reshape(64*64*64)
-grid_v = grid.reshape(64*64)
+#grid_v = grid.reshape(64*64)
 #print(grid_v)
 #grid = grid_v.reshape(64,64,64)
 # plotting
-plt.figure(figsize=(6,6))
-im = plt.imshow(grid[:,:], origin='lower',
-                extent=[coords.min(), coords.max(), coords.min(), coords.max()])
-plt.colorbar(im, label=r'$\rho / \rho_{\mathrm{EdS}}$')
-plt.xlabel("x")
-plt.ylabel("y")
-plt.title("LTB density slice")
-plt.show()
 
-if timestep == 0:
-    np.savetxt("../simsilun/grid", grid_v)
+#if timestep == 0:
+#    np.savetxt("../simsilun/grid", grid_v)

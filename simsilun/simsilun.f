@@ -5,7 +5,6 @@
 ! papers: arXiv:1707.01800, arXiv:1708.09143
 ! licence: GNU General Public License version 3 or any later version.
       implicit none
-
 	integer I,Ii
 	integer, parameter :: Nx = 4  ! number of variables evolved with the Silent Universe
 	double precision X(Nx)
@@ -25,13 +24,27 @@
         double precision InD(10) ! initial data and the final time instant
         double precision cpar(30)  ! vector with cosmological parameters
 
+        character(len=100) :: arg
+        double precision :: z_i, z_f, H_0
+
+        ! Read parameters from command line
+        call get_command_argument(1, arg)
+        read(arg,*) z_i
+
+        call get_command_argument(2, arg)
+        read(arg,*) z_f
+
+        call get_command_argument(3, arg)
+        read(arg,*) H_0
+
+        print *, "Running with z_i=", z_i, " z_f=", z_f, " H_0=", H_0
 
 ! cosmological parameters
-	call get_parameters(cpar)
+	call get_parameters(cpar, H_0)
 
 
 ! load initial data: density contrast vector deli(Ni) and other data in InD(10)
-	call initial_data(cpar,InD,Ni,Din)
+	call initial_data(cpar,InD,Ni,Din,z_i,z_f,H_0)
 
 
 	Rout = 0.0d0
@@ -57,12 +70,13 @@
 
 !=====================================================
 
-	subroutine initial_data(cpar,InD,Ni,Din)
+	subroutine initial_data(cpar,InD,Ni,Din,z_i,z_f,H_0)
 	implicit none
 	integer I,Ni       
 	double precision InD(10), Din(Ni)
         double precision cpar(30)
         double precision zo,zz,zf,cto,ctf
+        double precision, intent(in) :: z_i, z_f, H_0
 
 ! InD(1) = initial time instant
 ! InD(2) = background's density
@@ -75,29 +89,19 @@
 
 
 ! initial values: redshift, time instant, density, and expansion rate (the LCDM model assumed)
-	zo = 80.0!1090.0d0
+	zo = z_i!80.0!1090.0d0
 	zz = (zo+1.0d0)
-	call timelcdm(zo,cto)
+	call timelcdm(zo,cto,H_0)
 	InD(1) = cto
 	InD(2) = cpar(5)*(zz**3)
 	InD(3) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
   
 ! final time instants
-	zf = 0.01!0.0
-        call timelcdm(zf,ctf)
+	zf = z_f!0.01!0.0
+        call timelcdm(zf,ctf,H_0)
 	InD(4) = ctf
 	zz = (zf+1.0d0)
 	InD(5) = cpar(5)*(zz**3)
-
-
-        ! inside initial_data just after InD values set:
-        print *, 'DEBUG: zo = ', zo
-        print *, 'DEBUG: cto (InD(1)) = ', InD(1)
-        print *, 'DEBUG: background density InD(2) = ', InD(2)
-        print *, 'DEBUG: background expansion InD(3) = ', InD(3)
-        print *, 'DEBUG: zf = ', zf
-        print *, 'DEBUG: ctf (InD(4)) = ', InD(4)
-        print *, 'DEBUG: final background density InD(5) = ', InD(5)
 
 
 ! initial vector with density contrasts
@@ -298,11 +302,12 @@
 
 !=====================================================
 
-	subroutine timelcdm(zo,ctt)
+	subroutine timelcdm(zo,ctt,H_0)
 	implicit none
 	double precision zo,ct,lb,szpar(30),rhb,rhzo,x,arsh,tzo,ti,ctt
      	double precision ztt,thb
-	call get_parameters(szpar)
+     	double precision, intent(in) :: H_0
+	call get_parameters(szpar, H_0)
 
    	lb = szpar(7) 
 	if(lb==0d0) then
@@ -324,10 +329,10 @@
 
 !=====================================================
 
-   	subroutine get_parameters(cpar)
+   	subroutine get_parameters(cpar, H_0)
 	implicit none
 	double precision cpar(30)
-	double precision omega_matter,omega_lambda,H0,age
+	double precision omega_matter,omega_lambda,H_0,age
 	double precision pi, mu,lu,tu,gcons,cs,kap,kapc2,Ho,gkr,lb
 
 	pi = 4d0*datan(1.0d0)
@@ -335,7 +340,7 @@
 ! cosmological parameters / Planck 2015 (TT+lowP+lensing)
 	omega_matter = 0.999!0.308
 	omega_lambda = 1.0 - omega_matter
-	H0 = 70!67.810d0
+	!H0 = 70!67.810d0
 	  if(omega_lambda/=(1.0 - omega_matter)) then
 	   print *, 'The code uses the LCDM model to set up '
 	   print *, ' the initial conditions '
@@ -354,12 +359,12 @@
 	cs=299792458*(tu/lu)
 	kap=8d0*pi*gcons*(1d0/(cs**4))
 	kapc2=8d0*pi*gcons*(1d0/(cs**2))
-	Ho=(tu/(lu))*H0
+	Ho=(tu/(lu))*H_0
 	gkr=3d0*(((Ho)**2)/(8d0*pi*gcons))
 	lb=3d0*omega_lambda*(((Ho)**2)/(cs*cs))	
 	gkr=kapc2*gkr*omega_matter
 
-	cpar(1) = H0*1d-2
+	cpar(1) = H_0*1d-2
 	cpar(2) = Ho/cs
 	cpar(3) = omega_matter
 	cpar(4) = omega_lambda
@@ -377,7 +382,6 @@
 	cpar(11) = 1.d0
 ! dynamical step does not work well for some extreme cases
 ! so always test if this choice works well with your system
-
 
 	end
 !=====================================================
