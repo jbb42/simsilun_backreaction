@@ -20,7 +20,7 @@
 	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
         double precision Din(Ni),dini ! initial density contrast 
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
-
+        double precision dens(Ni), expa(Ni), shea(Ni), weyl(Ni)
         double precision InD(10) ! initial data and the final time instant
         double precision cpar(30)  ! vector with cosmological parameters
 
@@ -49,6 +49,10 @@
 
 	Rout = 0.0d0
 	Reds = 0.0d0
+	dens = 0.0d0
+	expa = 0.0d0
+	shea = 0.0d0
+	weyl = 0.0d0
 ! calculate the evolution of X(Nx) -> then -> write density to Xout
 !$OMP PARALLEL DO PRIVATE(I,dini,X),SHARED(InD,Din,Rout,Reds)
 	do I=1,Ni
@@ -56,6 +60,11 @@
 		call silent_evolution(InD,dini,Nx,X)
 	Rout(I) = (X(1)/InD(5)) 
 	Reds(I) = Din(I)*(InD(2)/InD(5))**(1.0/3.0) +1.0
+	dens(I) = X(1)
+	expa(I) = X(2)
+	shea(I) = X(3)
+	weyl(I) = X(4)
+
 	enddo
 !$OMP END PARALLEL DO
 
@@ -64,6 +73,11 @@
 	open(21,file='density')
 	do I=1,Ni
   	   write(21,*) Din(I),Rout(I),Reds(I)
+	enddo
+
+	open(22,file='params')
+	do I=1,Ni
+  	   write(22,*) dens(I),expa(I),shea(I),weyl(I)
 	enddo
 
       end
@@ -91,14 +105,14 @@
 ! initial values: redshift, time instant, density, and expansion rate (the LCDM model assumed)
 	zo = z_i!80.0!1090.0d0
 	zz = (zo+1.0d0)
-	call timelcdm(zo,cto,H_0)
+	call timeeds(zo,cto,H_0)
 	InD(1) = cto
 	InD(2) = cpar(5)*(zz**3)
-	InD(3) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
+	InD(3) = 3.0d0*cpar(2)*(zz**1.5)!3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
   
 ! final time instants
 	zf = z_f!0.01!0.0
-        call timelcdm(zf,ctf,H_0)
+        call timeeds(zf,ctf,H_0)
 	InD(4) = ctf
 	zz = (zf+1.0d0)
 	InD(5) = cpar(5)*(zz**3)
@@ -329,6 +343,28 @@
 
 !=====================================================
 
+	subroutine timeeds(zo,ctt,H_0)
+	implicit none
+	double precision zo,ct,lb,szpar(30),rhb,rhzo,x,arsh,tzo,ti,ctt
+     	double precision ztt,thb,lu,tu,Ho,a
+     	double precision, intent(in) :: H_0
+	call get_parameters(szpar, H_0)
+
+        ! Einstein-de Sitter time-redshift relation
+        lu=3.085678d19
+	    tu=31557600*1d6
+        Ho = (tu/(lu))*H_0
+        a = 1.0d0 / (1.0d0 + zo)   ! scale factor at redshift zo
+        tzo = (2.0d0 / (3.0d0*Ho)) * a**1.5
+        ct  = tzo
+        ctt = ct
+
+
+	end
+
+!=====================================================
+
+
    	subroutine get_parameters(cpar, H_0)
 	implicit none
 	double precision cpar(30)
@@ -338,7 +374,7 @@
 	pi = 4d0*datan(1.0d0)
 
 ! cosmological parameters / Planck 2015 (TT+lowP+lensing)
-	omega_matter = 0.99999!0.308
+	omega_matter = 1.0!0.308
 	omega_lambda = 1.0 - omega_matter
 	!H0 = 70!67.810d0
 	  if(omega_lambda/=(1.0 - omega_matter)) then
@@ -375,7 +411,7 @@
 	cpar(9) = kapc2
 
 ! virialisation type: 1=turnaround, 2=near singularity, 3=stable halo
-	cpar(10) = 1.0d0
+	cpar(10) = 2.0d0
 ! for option 2 ("collapsed"), please use either a fixed step (option 2 below), or please decrease the time step -- with default setting the results may not be accurate 
 
 ! fix vs dynamical time step: 1=dynamical, 2=fixed

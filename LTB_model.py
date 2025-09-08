@@ -73,6 +73,7 @@ def evolve_LTB(timestep, z_i, z_f, H_0):
     H0 = (tu / lu) * H_0
     t_0 = (2 / 3) * (1 / H0)  # Present time
     a_i = 1 / (1 + z_i)  # Initial scale factor
+
     t_i = t_0 * a_i ** (3 / 2)  # Initial time
     a_f = 1 / (1 + z_f)  # Final scale factor
     t_f = t_0 * a_f ** (3 / 2)  # Final time

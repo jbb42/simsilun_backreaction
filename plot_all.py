@@ -4,7 +4,7 @@ import subprocess
 from LTB_model import evolve_LTB as evolve_LTB
 
 z_i = 80    # Initial redshift
-z_f = 0     # Final redshift
+z_f = 0.1     # Final redshift
 H_0 = 70    # Hubble constant [km/s/Mpc]
 
 def plot_universe(grid, coords, posx, posy, title):
@@ -26,6 +26,7 @@ plot_universe(grid_i, coords_i, 1, 0, "LTB density slice at z="+str(z_i))
 
 grid_v = grid_i.reshape(64*64)
 np.savetxt("grid", grid_v)
+np.savetxt("simsilun/grid", grid_v)
 
 grid_f, coords_f = evolve_LTB(1, z_i, z_f, H_0)
 plot_universe(grid_f, coords_f, 0, 0, "LTB density slice at z="+str(z_f))
