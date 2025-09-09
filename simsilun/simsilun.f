@@ -16,7 +16,7 @@
 ! density and Weyl are x 8pi G/c^2 
 ! expansion and shear are x 1/c
 
-
+print(8*pi*gcons/cs**2)
 	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
         double precision Din(Ni),dini ! initial density contrast 
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
@@ -95,6 +95,8 @@
 	InD(1) = cto
 	InD(2) = cpar(5)*(zz**3)
 	InD(3) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
+	!3.0d0*cpar(2)*(zz**1.5)
+	!3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
   
 ! final time instants
 	zf = z_f!0.01!0.0
@@ -305,7 +307,7 @@
 	subroutine timelcdm(zo,ctt,H_0)
 	implicit none
 	double precision zo,ct,lb,szpar(30),rhb,rhzo,x,arsh,tzo,ti,ctt
-     	double precision ztt,thb
+     	double precision ztt,thb,  lu,tu,Ho,a
      	double precision, intent(in) :: H_0
 	call get_parameters(szpar, H_0)
 
@@ -324,6 +326,18 @@
          tzo = (dsqrt((4d0)/(3d0*lb)))*arsh 
          ct = tzo
          ctt = ct
+         print *, "LCDM time", ctt
+
+                 ! Einstein-de Sitter time-redshift relation
+        lu=3.085678d19
+	    tu=31557600*1d6
+        Ho = (tu/(lu))*H_0
+        a = 1.0d0 / (1.0d0 + zo)   ! scale factor at redshift zo
+        tzo = (2.0d0 / (3.0d0*Ho)) * a**1.5
+        ct  = tzo * szpar(6)
+        ctt = ct
+
+         print *, "EdS time", ctt
 
 	end
 

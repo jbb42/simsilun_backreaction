@@ -60,6 +60,21 @@ def rho(r, i):
 def rho_eds(i):
     return 3 * c ** 2 * ((2 / (3 * t[i])) ** 2 / (8 * np.pi * G))
 
+def R_dt(r, i):
+  return np.sqrt(2*M(r)/R(r, i)-E(r))*c
+
+def R_dr_dt(r,i):
+  return c**2/(2*R_dt(r, i))*(2*M_dr(r)/R(r, i)-2*M(r)*R_dr(r, i)/((R(r, i))**2)-E_dr(r))
+
+def a_eds_dt(i):
+  return 2/3*(t[i])**(-1/3)*(t_0)**(-2/3)
+
+def theta_eds(i):
+  return 3*a_eds_dt(i)/a_eds(i)
+
+def theta(r, i):
+  return 2*R_dt(r, i)/R(r, i)+R_dr_dt(r, i)/R_dr(r, i)
+
 def safe_rho(r, i):
     if r >= r_b*0.99:
         return rho_eds(i)
@@ -79,8 +94,7 @@ def evolve_LTB(timestep, z_i, z_f, H_0):
     t = np.array([t_i, t_f])
 
     g_size = 64
-    scale = 1
-    coords = (np.arange(g_size) - (g_size-1)/2) * scale
+    coords = (np.arange(g_size) - (g_size-1)/2)
     #X, Y, Z = np.meshgrid(coords, coords, coords)
     X, Y = np.meshgrid(coords, coords)
     #rad = np.sqrt(X**2 + Y**2 + Z**2)
@@ -93,4 +107,7 @@ def evolve_LTB(timestep, z_i, z_f, H_0):
             grid[ix, iy] = safe_rho(rad[ix, iy], timestep) / rho_eds(timestep)
     #        for iz in range(g_size):
     #            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
+    print("rho_eds =", rho_eds(timestep))
+    print("theta_eds =", theta_eds(timestep))
+    print("t =",t[timestep])
     return grid, coords
