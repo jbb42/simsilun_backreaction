@@ -16,7 +16,6 @@
 ! density and Weyl are x 8pi G/c^2 
 ! expansion and shear are x 1/c
 
-print(8*pi*gcons/cs**2)
 	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
         double precision Din(Ni),dini ! initial density contrast 
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model

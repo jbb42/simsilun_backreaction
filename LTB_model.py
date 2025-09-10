@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 """Constants"""
 # Defining constants
-k_max = 2e-13#2e-7 # why 1e-6 times original??
+k_max = 1e-13#2e-13#2e-7 # why 1e-6 times original??
 r_b = 32.0
 m = 4
 n = 4

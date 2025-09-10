@@ -9,6 +9,7 @@ def simsilun_odes(_, x_flat, kap, lb):
   of the form (5, Ni).
   """
   x = x_flat.reshape(4, Ni)
+  #x[1][x[1]<0] = 0 # Stop at turnover
   dxdt = np.zeros_like(x)
   dxdt[0] = -x[0] * x[1]  # ρ̇
   dxdt[1] = -(x[1] ** 2) / 3 - 0.5 * kap * x[0] - 6 * x[2] ** 2 + lb  # θ̇
@@ -16,6 +17,41 @@ def simsilun_odes(_, x_flat, kap, lb):
   dxdt[3] = -3 * x[3] * x[2] - x[1] * x[3] - 0.5 * kap * x[0] * x[2]  # Weyl̇
 
   return dxdt.flatten()
+"""
+def simsilun_odes(_, x_flat, kap, lb):
+#    
+#    The simsilun equations with x being a vector of shape (4, Ni).
+#    Freeze a cell once theta <= 0, and avoid letting rho run negative.
+#    
+    x = x_flat.reshape(4, Ni)
+
+    rho = x[0]
+    theta = x[1]
+    sigma = x[2]
+    weyl = x[3]
+
+    # active cells: still expanding AND positive density
+    active = (theta > 0) & (rho > 0)
+
+    dxdt = np.zeros_like(x)
+
+    # for active cells compute normal derivatives
+    dxdt[0, active] = -rho[active] * theta[active]  # rho dot
+    dxdt[1, active] = -(theta[active] ** 2) / 3 - 0.5 * kap * rho[active] - 6 * sigma[active] ** 2 + lb
+    dxdt[2, active] = -(2 / 3) * theta[active] * sigma[active] - weyl[active] + sigma[active] ** 2
+    dxdt[3, active] = -3 * weyl[active] * sigma[active] - theta[active] * weyl[active] - 0.5 * kap * rho[active] * sigma[active]
+
+    # ensure inactive (collapsed) cells remain frozen: dxdt already zero
+    # additionally: if rho <= 0 (rare overshoot), keep derivative zero to avoid going further negative
+    inactive_rho = rho <= 0
+    dxdt[0, inactive_rho] = 0.0
+    dxdt[1, inactive_rho] = 0.0
+    dxdt[2, inactive_rho] = 0.0
+    dxdt[3, inactive_rho] = 0.0
+
+    return dxdt.flatten()
+"""
+
 
 def plot_universe(axes, grid, coords, posx, title):
     ax = axes[posx]  # upper-left subplot
@@ -32,7 +68,7 @@ def plot_universe(axes, grid, coords, posx, title):
 
 pi = np.pi
 z_i = 80    # Initial redshift
-z_f = 79     # Final redshift
+z_f = 0     # Final redshift
 H_0 = 70    # Hubble constant [km/s/Mpc]
 omega_lambda = 0
 omega_matter = 1
@@ -97,4 +133,5 @@ plot_universe(axes, rho_f/rho_bg_f, coords, 1, "Final density")
 plot_universe(axes, rho_i/rho_bg_i, coords, 0, "Initial density")
 plt.show()
 
-#print(rho_f[32,32]/rho_bg_f)
+print(rho_f[32,32]/rho_bg_f)
+print(rho_f[0,0]/rho_bg_f)
