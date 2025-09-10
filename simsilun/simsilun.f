@@ -17,9 +17,9 @@
 ! expansion and shear are x 1/c
 
 	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
-        double precision Din(Ni),dini ! initial density contrast 
+        double precision Din(Ni),dini ! initial density contrast
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
-
+        double precision dens(Ni), expa(Ni), shea(Ni), weyl(Ni)
         double precision InD(10) ! initial data and the final time instant
         double precision cpar(30)  ! vector with cosmological parameters
 
@@ -48,13 +48,22 @@
 
 	Rout = 0.0d0
 	Reds = 0.0d0
+	dens = 0.0d0
+	expa = 0.0d0
+	shea = 0.0d0
+	weyl = 0.0d0
 ! calculate the evolution of X(Nx) -> then -> write density to Xout
 !$OMP PARALLEL DO PRIVATE(I,dini,X),SHARED(InD,Din,Rout,Reds)
 	do I=1,Ni
 		dini = Din(I)
 		call silent_evolution(InD,dini,Nx,X)
-	Rout(I) = (X(1)/InD(5)) 
+	Rout(I) = (X(1)/InD(5))
 	Reds(I) = Din(I)*(InD(2)/InD(5))**(1.0/3.0) +1.0
+	dens(I) = X(1)
+	expa(I) = (X(2)/InD(9))
+	shea(I) = 3*X(3)/InD(9)
+	weyl(I) = X(4)
+
 	enddo
 !$OMP END PARALLEL DO
 
@@ -63,6 +72,11 @@
 	open(21,file='density')
 	do I=1,Ni
   	   write(21,*) Din(I),Rout(I),Reds(I)
+	enddo
+
+	open(22,file='params')
+	do I=1,Ni
+  	   write(22,*) dens(I),expa(I),shea(I),weyl(I)
 	enddo
 
       end
@@ -85,6 +99,7 @@
 ! InD(6) = cosmological constant
 ! InD(7) = virialisation
 ! InD(8) = time step
+! InD(9) = final background expansion
 
 
 ! initial values: redshift, time instant, density, and expansion rate (the LCDM model assumed)
@@ -103,7 +118,7 @@
 	InD(4) = ctf
 	zz = (zf+1.0d0)
 	InD(5) = cpar(5)*(zz**3)
-
+	InD(9) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
 
 ! initial vector with density contrasts
 !Generate a simple example of initial conditions. 

@@ -4,42 +4,63 @@ import subprocess
 from LTB_model import evolve_LTB as evolve_LTB
 
 z_i = 80    # Initial redshift
-z_f = 0    # Final redshift
+z_f = 79    # Final redshift
 H_0 = 70    # Hubble constant [km/s/Mpc]
 
-def plot_universe(axes, grid, coords, posx, posy, title):
+def plot_universe(axes, grid, coords, posx, posy, title, lbl=r'$\rho / \rho_{\mathrm{EdS}}$'):
     ax = axes[posy, posx]  # upper-left subplot
 
     im = ax.imshow(grid[:, :], origin='lower',
                    extent=[coords.min(), coords.max(), coords.min(), coords.max()])
-    fig.colorbar(im, ax=ax, label=r'$\rho / \rho_{\mathrm{EdS}}$')
-
+    fig.colorbar(im, ax=ax, label=lbl)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_title(title)
 
     fig.tight_layout()
 
-fig, axes = plt.subplots(2, 2, figsize=(8, 8))
-grid_i, coords_i = evolve_LTB(0, z_i, z_f, H_0)
-plot_universe(axes, grid_i, coords_i, 1, 0, "LTB density slice at z="+str(z_i))
 
-grid_v = grid_i.reshape(64*64)
-np.savetxt("grid", grid_v)
-np.savetxt("simsilun/grid", grid_v)
+rho_i, theta_i, sigma_i, coords = evolve_LTB(0, z_i, z_f, H_0)
+np.savetxt("grid", rho_i.reshape(64*64))
 
-grid_f, coords_f = evolve_LTB(1, z_i, z_f, H_0)
-plot_universe(axes, grid_f, coords_f, 0, 0, "LTB density slice at z="+str(z_f))
+rho_f, theta_f, sigma_f, _ = evolve_LTB(1, z_i, z_f, H_0)
 
 subprocess.run(["simsilun/simsilun", str(z_i), str(z_f), str(H_0)], check=True)
-data = np.loadtxt("density")
+data_dens = np.loadtxt("density")
+rho_s = np.reshape(data_dens[:,1], [64,64])
+rho_d = rho_f-rho_s
 
-grid_s = np.reshape(data[:,1], [64,64])
-plot_universe(axes, grid_s, coords_i, 0, 1, "simsilun density slice at z="+str(z_f))
+params = np.loadtxt("params") #dens(I),expa(I),shea(I),weyl(I)
+theta_s = np.reshape(params[:,1], [64,64])
+theta_d = theta_f-theta_s
 
-grid_d = grid_f-grid_s
-plot_universe(axes, grid_d, coords_i, 1, 1, "difference at z="+str(z_f))
+sigma_s = np.reshape(params[:,2], [64,64])
+sigma_d = sigma_f-sigma_s
+
+
+# Plot density
+fig, axes = plt.subplots(2, 2, figsize=(8, 8))
+plot_universe(axes, rho_i, coords, 1, 0, "LTB density at z="+str(z_i))
+plot_universe(axes, rho_f, coords, 0, 0, "LTB density at z="+str(z_f))
+plot_universe(axes, rho_s, coords, 0, 1, "Simsilun density at z="+str(z_f))
+plot_universe(axes, rho_d, coords, 1, 1, "Difference at z="+str(z_f))
 plt.savefig("density.pdf")
 plt.show()
 
-print(grid_f[32,32])
+# Plot expansion
+fig, axes = plt.subplots(2, 2, figsize=(8, 8))
+plot_universe(axes, theta_i, coords, 1, 0, "LTB expansion at z="+str(z_i),lbl=r'$\theta / \theta_{\mathrm{EdS}}$')
+plot_universe(axes, theta_f, coords, 0, 0, "LTB expansion at z="+str(z_f),lbl=r'$\theta / \theta_{\mathrm{EdS}}$')
+plot_universe(axes, theta_s, coords, 0, 1, "Simsilun expansion at z="+str(z_f),lbl=r'$\theta / \theta_{\mathrm{EdS}}$')
+plot_universe(axes, theta_d, coords, 1, 1, "Difference at z="+str(z_f),lbl=r'$\theta / \theta_{\mathrm{EdS}}$')
+plt.savefig("expansion.pdf")
+plt.show()
+
+# Plot shear
+fig, axes = plt.subplots(2, 2, figsize=(8, 8))
+plot_universe(axes, sigma_i, coords, 1, 0, "LTB shear at z="+str(z_i),lbl=r'$3\sigma / \theta_{\mathrm{EdS}}$')
+plot_universe(axes, sigma_f, coords, 0, 0, "LTB shear at z="+str(z_f),lbl=r'$3\sigma / \theta_{\mathrm{EdS}}$')
+plot_universe(axes, sigma_s, coords, 0, 1, "Simsilun shear at z="+str(z_f),lbl=r'$3\sigma / \theta_{\mathrm{EdS}}$')
+plot_universe(axes, sigma_d, coords, 1, 1, "Difference at z="+str(z_f),lbl=r'$3\sigma / \theta_{\mathrm{EdS}}$')
+plt.savefig("expansion.pdf")
+plt.show()
