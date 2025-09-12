@@ -36,7 +36,6 @@ def a_eds(i):
     return (t[i] / t_0) ** (2 / 3)
 
 def f_eta(r, i):
-    eta = np.zeros(np.size(r))
     x = np.ones(np.size(r)) * (1 + small)
     fder = lambda x, r: np.cosh(x) - 1
     f = lambda x, r: np.sinh(x) - x - ((-E(r)) ** (3 / 2) / M(r) * c * t[i])

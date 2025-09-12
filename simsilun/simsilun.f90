@@ -73,7 +73,7 @@ do I = 1, Ni
     ! Store results
     Rout(I) = X(1)/InD(5)
     Reds(I) = Din(I)*(InD(2)/InD(5))**(1.0/3.0) + 1.0
-    dens(I) = X(1)
+    dens(I) = X(1)/InD(5)
     expa(I) = X(2)/InD(9)
     shea(I) = 3*X(3)/InD(9)
     weyl(I) = X(4)
