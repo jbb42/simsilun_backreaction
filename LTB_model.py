@@ -78,14 +78,17 @@ def theta(r, i):
 def sigma(r, i):
   return 1/np.sqrt(3)*(-R_dt(r, i)/R(r, i)+R_dr_dt(r, i)/R_dr(r, i))#**2 #this is sigma**2 with units 1/s**2
 
+def weyl(r, i):
+    return M(r)/(3*R(r, i)**3)*(3*R_dr(r,i)-R(r,i)*M_dr(r)/M(r))/R_dr(r,i)
+
 def safe_rho(r, i):
-    if r >= r_b*0.99:
+    if r >= r_b*0.995:
         return rho_eds(i)
     else:
         return rho(r, i)
 
 def safe_theta(r, i):
-    if r >= r_b*0.99:
+    if r >= r_b*0.995:
         return theta_eds(i)
     else:
         return theta(r, i)
@@ -95,6 +98,53 @@ def safe_sigma(r, i):
         return 0
     else:
         return sigma(r, i)
+
+def safe_weyl(r, i):
+    if r >= r_b*0.995:
+        return 0
+    else:
+        return weyl(r, i)
+
+
+# Using simsilun values/units
+def sim_rho(r,i):
+    return 2*M_dr(r)/(R(r, i) ** 2 * R_dr(r, i))
+
+
+def sim_theta(r,i):
+    return 2*R_dt(r, i)/R(r, i)+R_dr_dt(r, i)/R_dr(r, i)
+
+def sim_sigma(r,i):
+    return -1/3*(R_dr_dt(r, i)/R_dr(r, i)-R_dt(r, i)/R(r, i))
+
+def sim_weyl(r,i):
+    return M(r)/(3*R(r, i)**3)*(3*R_dr(r,i)-R(r,i)*M_dr(r)/M(r))/R_dr(r,i)
+
+def rho_eds(i):
+    return 1/c**2 * 3 * (2 / (3 * t[i])) ** 2
+
+def safe_rho(r, i):
+    if r >= r_b*0.99:
+        return rho_eds(i)
+    else:
+        return sim_rho(r, i)
+def safe_theta(r, i):
+    if r >= r_b*0.99:
+        return theta_eds(i)
+    else:
+        return sim_theta(r, i)
+def safe_sigma(r, i):
+    if r >= r_b*0.99:
+        return 0
+    else:
+        return sim_sigma(r, i)
+def safe_weyl(r, i):
+    if r >= r_b*0.99:
+        return 0
+    else:
+        return sim_weyl(r, i)
+
+
 
 # Element-wise evaluation
 def evolve_LTB(timestep, z_i, z_f, H_0):
@@ -117,12 +167,13 @@ def evolve_LTB(timestep, z_i, z_f, H_0):
     grid_rho = np.empty_like(rad)
     grid_theta = np.empty_like(rad)
     grid_sigma = np.empty_like(rad)
-
+    grid_weyl = np.empty_like(rad)
     for ix in range(g_size):
         for iy in range(g_size):
             grid_rho[ix, iy] = safe_rho(rad[ix, iy], timestep) / rho_eds(timestep)
-            grid_theta[ix, iy] = safe_theta(rad[ix, iy], timestep)/theta_eds(timestep)
-            grid_sigma[ix, iy] = 3*safe_sigma(rad[ix, iy], timestep)/(theta_eds(timestep))
+            grid_theta[ix, iy] = safe_theta(rad[ix, iy], timestep) / theta_eds(timestep)
+            grid_sigma[ix, iy] = 3*safe_sigma(rad[ix, iy], timestep) / theta_eds(timestep)
+            grid_weyl[ix, iy] = safe_weyl(rad[ix, iy], timestep)# / rho_eds(timestep)
     #        for iz in range(g_size):
     #            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
-    return grid_rho, grid_theta, grid_sigma, coords
+    return grid_rho, grid_theta, grid_sigma, grid_weyl, coords

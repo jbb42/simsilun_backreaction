@@ -1,6 +1,6 @@
       program simsilun
 ! code: SIMplified SILent UNiverse, https://bitbucket.org/bolejko/simsilun
-! author: Krzysztof Bolejko 
+! author: Krzysztof Bolejko
 ! disclaimer: There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ! papers: arXiv:1707.01800, arXiv:1708.09143
 ! licence: GNU General Public License version 3 or any later version.
@@ -13,11 +13,12 @@
 ! X(3) = shear
 ! X(4) = Weyl
 !----------UNITS:-------------
-! density and Weyl are x 8pi G/c^2 
+! density and Weyl are x 8pi G/c^2
 ! expansion and shear are x 1/c
 
 	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
         double precision Din(Ni),dini ! initial density contrast
+        double precision Ein(Ni),Sin(Ni),Win(Ni),eini,sini,wini
         double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
         double precision dens(Ni), expa(Ni), shea(Ni), weyl(Ni)
         double precision InD(10) ! initial data and the final time instant
@@ -43,7 +44,7 @@
 
 
 ! load initial data: density contrast vector deli(Ni) and other data in InD(10)
-	call initial_data(cpar,InD,Ni,Din,z_i,z_f,H_0)
+	call initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,z_i,z_f,H_0)
 
 
 	Rout = 0.0d0
@@ -53,18 +54,28 @@
 	shea = 0.0d0
 	weyl = 0.0d0
 ! calculate the evolution of X(Nx) -> then -> write density to Xout
-!$OMP PARALLEL DO PRIVATE(I,dini,X),SHARED(InD,Din,Rout,Reds)
-	do I=1,Ni
-		dini = Din(I)
-		call silent_evolution(InD,dini,Nx,X)
-	Rout(I) = (X(1)/InD(5))
-	Reds(I) = Din(I)*(InD(2)/InD(5))**(1.0/3.0) +1.0
-	dens(I) = X(1)
-	expa(I) = (X(2)/InD(9))
-	shea(I) = 3*X(3)/InD(9)
-	weyl(I) = X(4)
 
-	enddo
+
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(I,dini,eini,sini,wini,X) &
+!$OMP& SHARED(InD,Din,Ein,Sin,Win,Rout,Reds,dens,expa,shea,weyl)
+do I = 1, Ni
+    ! Load initial conditions
+    dini = Din(I)
+    eini = Ein(I)
+    sini = Sin(I)
+    wini = Win(I)
+
+    ! Call the evolution routine
+    call silent_evolution(InD, dini, eini, sini, wini, Nx, X)
+
+    ! Store results
+    Rout(I) = X(1)/InD(5)
+    Reds(I) = Din(I)*(InD(2)/InD(5))**(1.0/3.0) + 1.0
+    dens(I) = X(1)
+    expa(I) = X(2)/InD(9)
+    shea(I) = 3*X(3)/InD(9)
+    weyl(I) = X(4)
+end do
 !$OMP END PARALLEL DO
 
 
@@ -83,10 +94,10 @@
 
 !=====================================================
 
-	subroutine initial_data(cpar,InD,Ni,Din,z_i,z_f,H_0)
+	subroutine initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,z_i,z_f,H_0)
 	implicit none
-	integer I,Ni       
-	double precision InD(10), Din(Ni)
+	integer I,Ni
+	double precision InD(10), Din(Ni), Ein(Ni), Sin(Ni), Win(Ni)
         double precision cpar(30)
         double precision zo,zz,zf,cto,ctf
         double precision, intent(in) :: z_i, z_f, H_0
@@ -111,7 +122,7 @@
 	InD(3) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
 	!3.0d0*cpar(2)*(zz**1.5)
 	!3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
-  
+
 ! final time instants
 	zf = z_f!0.01!0.0
         call timelcdm(zf,ctf,H_0)
@@ -121,20 +132,37 @@
 	InD(9) = 3.0d0*cpar(2)*dsqrt(cpar(3)*(zz**3) + cpar(4))
 
 ! initial vector with density contrasts
-!Generate a simple example of initial conditions. 
+!Generate a simple example of initial conditions.
 !Modify this to read in a more realistic set of initial conditions, e.g. from the Millenium simulation initial conditions as in arXiv:1708.09143
 !	do I=1,Ni
 !	Din(I) = -0.00095+0.000001*I
 !	enddo
 
-        open(unit=10, file="grid", status="old", action="read")
-
+        open(unit=10, file="rho_i", status="old", action="read")
             do i = 1, Ni
                 read(10, *) Din(i)
                 Din(i) = Din(i)-1.0
         end do
-
         close(10)
+
+        open(unit=11, file="theta_i", status="old", action="read")
+            do i = 1, Ni
+                read(11, *) Ein(i)
+        end do
+        close(11)
+
+        open(unit=12, file="sigma_i", status="old", action="read")
+            do i = 1, Ni
+                read(12, *) Sin(i)
+        end do
+        close(12)
+
+        open(unit=13, file="weyl_i", status="old", action="read")
+            do i = 1, Ni
+                read(13, *) Win(i)
+        end do
+        close(13)
+
 ! other parameters
 	InD(6) = cpar(7)
 	InD(7) = cpar(10)
@@ -145,11 +173,11 @@
 
 !=====================================================
 
-	subroutine silent_evolution(InD,dini,Nx,X)
+	subroutine silent_evolution(InD,dini,eini,sini,wini,Nx,X)
 	implicit none
 	integer I,J, Nx,Nf,Nq
 	integer option, virialisation
-        double precision, intent(in) :: InD(10), dini
+        double precision, intent(in) :: InD(10), dini,eini,sini,wini
 	double precision X(Nx),Xi(Nx),Xii(Nx),V(Nx),RK(Nx,4)
 	double precision xp,xp1,xp2,xp3,yp(Nx),yp1(Nx),yp2(Nx),yp3(Nx)
 	double precision lb,tevo,dt,cti,cto,ctf
@@ -161,7 +189,7 @@
 	virialisation = int(InD(7))
 	option = int(InD(8))
         collapse = .false.
-	
+
 ! time of integration, and other time instants:
 	cto = InD(1)
 	ctf = InD(4)
@@ -173,9 +201,9 @@
 
 ! initial conditions
   	X(1) = InD(2)*(1.0d0 + dini        )
-	X(2) = InD(3)*(1.0d0 -(dini/3.0d0) )
-	X(3) =  (dini/9.0d0)*InD(3) 
-	X(4) = -(dini/6.0d0)*InD(2) 
+	X(2) = eini*InD(3)!InD(3)*(1.0d0 -(dini/3.0d0) )!
+	X(3) = sini*InD(3)/3 !(dini/9.0d0)*InD(3)
+	X(4) = wini!*InD(2)/2!-(dini/6.0d0)*InD(2)
 	call get_V(Nx,X,lb,V)
         Xi = X
 	Xii= X
@@ -205,21 +233,21 @@
 	if(option==2) dt = tevo/(1.0d0*Nf)
 
         cti = cti + dt
-	     
+
 	call get_V(Nx,X,lb,V)
                   do J=1,Nx
                   RK(J,1) = dt*V(J)
-                  X(J) = Xi(J) + 0.5*RK(J,1) 
+                  X(J) = Xi(J) + 0.5*RK(J,1)
                   enddo
 	call get_V(Nx,X,lb,V)
                   do J=1,Nx
                   RK(J,2) = dt*V(J)
-                  X(J) = Xi(J) + 0.5*RK(J,2) 
+                  X(J) = Xi(J) + 0.5*RK(J,2)
                   enddo
 	call get_V(Nx,X,lb,V)
                   do J=1,Nx
                   RK(J,3) = dt*V(J)
-                  X(J) = Xi(J) + RK(J,3) 
+                  X(J) = Xi(J) + RK(J,3)
                   enddo
 	call get_V(Nx,X,lb,V)
               do J=1,Nx
@@ -251,14 +279,14 @@
 		X(4) = 0.0d0
 	        goto 102
 		endif
-	
+
 	endif
 
 ! due to implementation of the dynamical step, the time integration
 ! will overshoot the final instant, hence the Lagrange Interpolation:
 	xp1 = xp2
 	xp2 = xp3
-	xp3 = cti 
+	xp3 = cti
 	xp  = ctf
         if(cti==ctf) goto 102
         if(cti>ctf) then
@@ -284,7 +312,7 @@
  	  print *, '3. look for shell crossing singularities'
 	  print *, '---calculations are being aborted---'
 	  stop
-	endif	
+	endif
 	if(cti<ctf) then
 	Nq = Nq + 1
 	goto 101
@@ -325,7 +353,7 @@
      	double precision, intent(in) :: H_0
 	call get_parameters(szpar, H_0)
 
-   	lb = szpar(7) 
+   	lb = szpar(7)
 	if(lb==0d0) then
 	print *, 'Lambda cannot be zero'
 	print *, 'if you want to use models with Lambda=0'
@@ -337,7 +365,7 @@
          rhzo = szpar(5)*( (1.0d0+zo)**3 )
          x = dsqrt(lb/rhzo)
   	 arsh = dlog(x + dsqrt(x*x + 1d0))
-         tzo = (dsqrt((4d0)/(3d0*lb)))*arsh 
+         tzo = (dsqrt((4d0)/(3d0*lb)))*arsh
          ct = tzo
          ctt = ct
          print *, "LCDM time", ctt
@@ -382,14 +410,14 @@
 	mu=1.989d45
 	lu=3.085678d19
 	tu=31557600*1d6
-! and other constants 
+! and other constants
 	gcons= 6.6742d-11*((mu*(tu**2))/(lu**3))
 	cs=299792458*(tu/lu)
 	kap=8d0*pi*gcons*(1d0/(cs**4))
 	kapc2=8d0*pi*gcons*(1d0/(cs**2))
 	Ho=(tu/(lu))*H_0
 	gkr=3d0*(((Ho)**2)/(8d0*pi*gcons))
-	lb=3d0*omega_lambda*(((Ho)**2)/(cs*cs))	
+	lb=3d0*omega_lambda*(((Ho)**2)/(cs*cs))
 	gkr=kapc2*gkr*omega_matter
 
 	cpar(1) = H_0*1d-2
@@ -404,7 +432,7 @@
 
 ! virialisation type: 1=turnaround, 2=near singularity, 3=stable halo
 	cpar(10) = 1.0d0
-! for option 2 ("collapsed"), please use either a fixed step (option 2 below), or please decrease the time step -- with default setting the results may not be accurate 
+! for option 2 ("collapsed"), please use either a fixed step (option 2 below), or please decrease the time step -- with default setting the results may not be accurate
 
 ! fix vs dynamical time step: 1=dynamical, 2=fixed
 	cpar(11) = 1.d0
