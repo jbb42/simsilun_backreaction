@@ -30,7 +30,6 @@ np.savetxt("weyl_i", weyl_i.reshape(64*64))
 rho_f, theta_f, sigma_f, weyl_f, _ = evolve_LTB(1, z_i, z_f, H_0)
 
 subprocess.run(["simsilun/simsilun", str(z_i), str(z_f), str(H_0), ".true." if all_ic else ".false."], check=True)
-#data_dens = np.loadtxt("density")
 
 params = np.loadtxt("params") #dens(I),expa(I),shea(I),weyl(I)
 rho_s = np.reshape(params[:,0], [64,64])
