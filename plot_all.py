@@ -6,6 +6,7 @@ from LTB_model import evolve_LTB as evolve_LTB
 z_i = 1100    # Initial redshift
 z_f = 0    # Final redshift
 H_0 = 70    # Hubble constant [km/s/Mpc]
+all_ic = False # Use all initial conditions vs calculate from density contrast
 
 def plot_universe(axes, grid, coords, posx, posy, title, lbl=r'$\rho / \rho_{\mathrm{EdS}}$'):
     ax = axes[posy, posx]  # upper-left subplot
@@ -28,7 +29,7 @@ np.savetxt("weyl_i", weyl_i.reshape(64*64))
 
 rho_f, theta_f, sigma_f, weyl_f, _ = evolve_LTB(1, z_i, z_f, H_0)
 
-subprocess.run(["simsilun/simsilun", str(z_i), str(z_f), str(H_0)], check=True)
+subprocess.run(["simsilun/simsilun", str(z_i), str(z_f), str(H_0), ".true." if all_ic else ".false."], check=True)
 data_dens = np.loadtxt("density")
 rho_s = np.reshape(data_dens[:,1], [64,64])
 rho_d = rho_f-rho_s

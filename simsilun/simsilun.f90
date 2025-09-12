@@ -23,7 +23,7 @@
         double precision dens(Ni), expa(Ni), shea(Ni), weyl(Ni)
         double precision InD(10) ! initial data and the final time instant
         double precision cpar(30)  ! vector with cosmological parameters
-
+        logical :: all_ic
         character(len=100) :: arg
         double precision :: z_i, z_f, H_0
 
@@ -37,8 +37,10 @@
         call get_command_argument(3, arg)
         read(arg,*) H_0
 
-        print *, "Running with z_i=", z_i, " z_f=", z_f, " H_0=", H_0
+        call get_command_argument(4, arg)
+        read(arg,*) all_ic
 
+        print *, "Running with z_i=", z_i, " z_f=", z_f, " H_0=", H_0, " all_ic=", all_ic
 ! cosmological parameters
 	call get_parameters(cpar, H_0)
 
@@ -57,7 +59,7 @@
 
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(I,dini,eini,sini,wini,X) &
-!$OMP& SHARED(InD,Din,Ein,Sin,Win,Rout,Reds,dens,expa,shea,weyl)
+!$OMP& SHARED(InD,Din,Ein,Sin,Win,Rout,Reds,dens,expa,shea,weyl,all_ic)
 do I = 1, Ni
     ! Load initial conditions
     dini = Din(I)
@@ -66,7 +68,7 @@ do I = 1, Ni
     wini = Win(I)
 
     ! Call the evolution routine
-    call silent_evolution(InD, dini, eini, sini, wini, Nx, X)
+    call silent_evolution(InD, dini, eini, sini, wini, Nx, X, all_ic)
 
     ! Store results
     Rout(I) = X(1)/InD(5)
@@ -173,7 +175,7 @@ end do
 
 !=====================================================
 
-	subroutine silent_evolution(InD,dini,eini,sini,wini,Nx,X)
+	subroutine silent_evolution(InD,dini,eini,sini,wini,Nx,X,all_ic)
 	implicit none
 	integer I,J, Nx,Nf,Nq
 	integer option, virialisation
@@ -181,7 +183,7 @@ end do
 	double precision X(Nx),Xi(Nx),Xii(Nx),V(Nx),RK(Nx,4)
 	double precision xp,xp1,xp2,xp3,yp(Nx),yp1(Nx),yp2(Nx),yp3(Nx)
 	double precision lb,tevo,dt,cti,cto,ctf
-        logical collapse
+        logical collapse, all_ic
 
 
 ! parameters
@@ -200,10 +202,18 @@ end do
 	xp3 = cto
 
 ! initial conditions
-  	X(1) = InD(2)*(1.0d0 + dini        )
-	X(2) = eini*InD(3)!InD(3)*(1.0d0 -(dini/3.0d0) )!
-	X(3) = sini*InD(3)/3 !(dini/9.0d0)*InD(3)
-	X(4) = wini!*InD(2)/2!-(dini/6.0d0)*InD(2)
+    if(all_ic) then
+        X(1) = InD(2)*(1.0d0 + dini        )
+        X(2) = eini*InD(3)!InD(3)*(1.0d0 -(dini/3.0d0) )!
+        X(3) = sini*InD(3)/3 !(dini/9.0d0)*InD(3)
+        X(4) = wini!*InD(2)/2!-(dini/6.0d0)*InD(2)
+    else
+        X(1) = InD(2)*(1.0d0 + dini        )
+        X(2) = InD(3)*(1.0d0 -(dini/3.0d0) )
+        X(3) = (dini/9.0d0)*InD(3)
+        X(4) = -(dini/6.0d0)*InD(2)
+    end if
+
 	call get_V(Nx,X,lb,V)
         Xi = X
 	Xii= X
