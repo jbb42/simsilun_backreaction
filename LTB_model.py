@@ -1,10 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
+from tqdm import tqdm
+from numba import njit, prange
+
 """Constants"""
 # Defining constants
 k_max = 1e-13#2e-13#2e-7 # why 1e-6 times original??
-r_b = 32.0
+g_size = 64
+r_b = g_size/2
 m = 4
 n = 4
 small = 1e-3  # do not make smaller
@@ -123,27 +127,31 @@ def rho_eds(i):
     return 1/c**2 * 3 * (2 / (3 * t[i])) ** 2
 
 def safe_rho(r, i):
-    if r >= r_b*0.99:
+    if r >= r_b*0.98:
         return rho_eds(i)
     else:
         return sim_rho(r, i)
 def safe_theta(r, i):
-    if r >= r_b*0.99:
+    if r >= r_b*0.98:
         return theta_eds(i)
     else:
         return sim_theta(r, i)
 def safe_sigma(r, i):
-    if r >= r_b*0.99:
+    if r >= r_b*0.98:
         return 0
     else:
         return sim_sigma(r, i)
 def safe_weyl(r, i):
-    if r >= r_b*0.99:
+    if r >= r_b*0.98:
         return 0
     else:
         return sim_weyl(r, i)
 
-
+def safe_V(r, i):
+    if r >= r_b*0.98:
+        return a_eds(i)**3#deter_eds(r, i)/r**2
+    else:
+        return R_dr(r,i)*R(r,i)**2/np.sqrt(1-E(r))/r**2
 
 # Element-wise evaluation
 def evolve_LTB(timestep, z_i, z_f, H_0):
@@ -156,23 +164,27 @@ def evolve_LTB(timestep, z_i, z_f, H_0):
     t_f = t_0 * a_f ** (3 / 2)  # Final time
     t = np.array([t_i, t_f])
 
-    g_size = 64
     coords = (np.arange(g_size) - (g_size-1)/2)
-    #X, Y, Z = np.meshgrid(coords, coords, coords)
-    X, Y = np.meshgrid(coords, coords)
-    #rad = np.sqrt(X**2 + Y**2 + Z**2)
-    rad = np.sqrt(X**2 + Y**2)
+    X, Y, Z = np.meshgrid(coords, coords, coords)
+    rad = np.sqrt(X**2 + Y**2 + Z**2)
     # Preallocate grid
     grid_rho = np.empty_like(rad)
     grid_theta = np.empty_like(rad)
     grid_sigma = np.empty_like(rad)
     grid_weyl = np.empty_like(rad)
-    for ix in range(g_size):
+    grid_V = np.empty_like(rad)
+    for ix in tqdm(range(g_size)):
         for iy in range(g_size):
-            grid_rho[ix, iy] = safe_rho(rad[ix, iy], timestep) / rho_eds(timestep)
-            grid_theta[ix, iy] = safe_theta(rad[ix, iy], timestep) / theta_eds(timestep)
-            grid_sigma[ix, iy] = 3*safe_sigma(rad[ix, iy], timestep) / theta_eds(timestep)
-            grid_weyl[ix, iy] = safe_weyl(rad[ix, iy], timestep)# / rho_eds(timestep)
-    #        for iz in range(g_size):
-    #            grid[ix, iy, iz] = safe_rho(rad[ix,iy,iz], timestep) / rho_eds(timestep)
-    return grid_rho, grid_theta, grid_sigma, grid_weyl, coords
+            for iz in range(g_size):
+                grid_rho[ix, iy, iz] = safe_rho(rad[ix, iy, iz], timestep) / rho_eds(timestep)
+                grid_theta[ix, iy, iz] = safe_theta(rad[ix, iy, iz], timestep) / theta_eds(timestep)
+                grid_sigma[ix, iy, iz] = 3*safe_sigma(rad[ix, iy, iz], timestep) / theta_eds(timestep)
+                grid_weyl[ix, iy, iz] = safe_weyl(rad[ix, iy, iz], timestep)# / rho_eds(timestep)
+                grid_V[ix, iy, iz] = safe_V(rad[ix, iy, iz], timestep)
+    np.save(f"data/grid_rho{timestep}.npy", grid_rho, allow_pickle=True)
+    np.save(f"data/grid_theta{timestep}.npy", grid_theta, allow_pickle=True)
+    np.save(f"data/grid_sigma{timestep}.npy", grid_sigma, allow_pickle=True)
+    np.save(f"data/grid_weyl{timestep}.npy", grid_weyl, allow_pickle=True)
+    np.save(f"data/grid_V{timestep}.npy", grid_V, allow_pickle=True)
+
+    return grid_rho, grid_theta, grid_sigma, grid_weyl, grid_V

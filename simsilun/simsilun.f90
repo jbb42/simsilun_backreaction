@@ -6,26 +6,35 @@
 ! licence: GNU General Public License version 3 or any later version.
       implicit none
 	integer I,Ii
-	integer, parameter :: Nx = 4  ! number of variables evolved with the Silent Universe
+	integer, parameter :: Nx = 5  ! number of variables evolved with the Silent Universe
 	double precision X(Nx)
 ! X(1) = density
 ! X(2) = expansion
 ! X(3) = shear
 ! X(4) = Weyl
+! X(5) = volume
 !----------UNITS:-------------
 ! density and Weyl are x 8pi G/c^2
 ! expansion and shear are x 1/c
 
-	integer, parameter :: Ni = 64*64!*64 !2000  ! dimension of the initial data vector - for single value Ni = 1
-        double precision Din(Ni),dini ! initial density contrast
-        double precision Ein(Ni),Sin(Ni),Win(Ni),eini,sini,wini
-        double precision Rout(Ni), Reds(Ni) ! final density in Silent Universe and within linearly perturbed Einstein-de Sitter model
-        double precision dens(Ni), expa(Ni), shea(Ni), weyl(Ni)
-        double precision InD(10) ! initial data and the final time instant
-        double precision cpar(30)  ! vector with cosmological parameters
-        logical :: all_ic
-        character(len=100) :: arg
-        double precision :: z_i, z_f, H_0
+    integer, parameter :: Ni = 64*64*64  ! dimension of the initial data vector
+
+      ! Make large arrays allocatable
+      double precision, allocatable :: Din(:), Ein(:), Sin(:), Win(:), Vin(:)
+      double precision, allocatable :: Rout(:), Reds(:), dens(:), expa(:), shea(:), weyl(:), Vol(:)
+
+      ! Scalars (keep them as is)
+      double precision :: dini, eini, sini, wini, vini
+      double precision :: InD(10)
+      double precision :: cpar(30)
+      logical :: all_ic
+      character(len=100) :: arg
+      double precision :: z_i, z_f, H_0
+
+      ! Allocate arrays AFTER Ni is known
+      allocate(Din(Ni), Ein(Ni), Sin(Ni), Win(Ni), Vin(Ni))
+      allocate(Rout(Ni), Reds(Ni), dens(Ni), expa(Ni), shea(Ni), weyl(Ni), Vol(Ni))
+
 
         ! Read parameters from command line
         call get_command_argument(1, arg)
@@ -46,7 +55,7 @@
 
 
 ! load initial data: density contrast vector deli(Ni) and other data in InD(10)
-	call initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,z_i,z_f,H_0)
+	call initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,Vin,z_i,z_f,H_0)
 
 
 	Rout = 0.0d0
@@ -55,20 +64,22 @@
 	expa = 0.0d0
 	shea = 0.0d0
 	weyl = 0.0d0
+    Vol  = 0.0d0
 ! calculate the evolution of X(Nx) -> then -> write density to Xout
 
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(I,dini,eini,sini,wini,X) &
-!$OMP& SHARED(InD,Din,Ein,Sin,Win,Rout,Reds,dens,expa,shea,weyl,all_ic)
+!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(I,dini,eini,sini,wini,vini,X) &
+!$OMP& SHARED(InD,Din,Ein,Sin,Win,Vin,Rout,Reds,dens,expa,shea,weyl,Vol,all_ic)
 do I = 1, Ni
     ! Load initial conditions
     dini = Din(I)
     eini = Ein(I)
     sini = Sin(I)
     wini = Win(I)
+    vini = vin(I)
 
     ! Call the evolution routine
-    call silent_evolution(InD, dini, eini, sini, wini, Nx, X, all_ic)
+    call silent_evolution(InD, dini,eini,sini,wini,vini, Nx, X, all_ic)
 
     ! Store results
     Rout(I) = X(1)/InD(5)
@@ -77,6 +88,7 @@ do I = 1, Ni
     expa(I) = X(2)/InD(9)
     shea(I) = 3*X(3)/InD(9)
     weyl(I) = X(4)
+    Vol(I)    = X(5)
 end do
 !$OMP END PARALLEL DO
 
@@ -89,17 +101,17 @@ end do
 
 	open(22,file='params')
 	do I=1,Ni
-  	   write(22,*) dens(I),expa(I),shea(I),weyl(I)
+  	   write(22,*) dens(I),expa(I),shea(I),weyl(I),Vol(I)
 	enddo
 
       end
 
 !=====================================================
 
-	subroutine initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,z_i,z_f,H_0)
+	subroutine initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,Vin,z_i,z_f,H_0)
 	implicit none
 	integer I,Ni
-	double precision InD(10), Din(Ni), Ein(Ni), Sin(Ni), Win(Ni)
+	double precision InD(10),Din(Ni),Ein(Ni),Sin(Ni),Win(Ni),Vin(Ni)
         double precision cpar(30)
         double precision zo,zz,zf,cto,ctf
         double precision, intent(in) :: z_i, z_f, H_0
@@ -165,6 +177,12 @@ end do
         end do
         close(13)
 
+        open(unit=14, file="V_i", status="old", action="read")
+        do i = 1, Ni
+            read(14, *) Vin(i)
+        end do
+        close(14)
+
 ! other parameters
 	InD(6) = cpar(7)
 	InD(7) = cpar(10)
@@ -175,11 +193,11 @@ end do
 
 !=====================================================
 
-	subroutine silent_evolution(InD,dini,eini,sini,wini,Nx,X,all_ic)
+	subroutine silent_evolution(InD,dini,eini,sini,wini,vini,Nx,X,all_ic)
 	implicit none
 	integer I,J, Nx,Nf,Nq
 	integer option, virialisation
-        double precision, intent(in) :: InD(10), dini,eini,sini,wini
+        double precision, intent(in) :: InD(10), dini,eini,sini,wini,vini
 	double precision X(Nx),Xi(Nx),Xii(Nx),V(Nx),RK(Nx,4)
 	double precision xp,xp1,xp2,xp3,yp(Nx),yp1(Nx),yp2(Nx),yp3(Nx)
 	double precision lb,tevo,dt,cti,cto,ctf
@@ -207,11 +225,13 @@ end do
         X(2) = eini*InD(3)!InD(3)*(1.0d0 -(dini/3.0d0) )!
         X(3) = sini*InD(3)/3 !(dini/9.0d0)*InD(3)
         X(4) = wini!*InD(2)/2!-(dini/6.0d0)*InD(2)
+        X(5) = vini
     else
         X(1) = InD(2)*(1.0d0 + dini        )
         X(2) = InD(3)*(1.0d0 -(dini/3.0d0) )
         X(3) = (dini/9.0d0)*InD(3)
         X(4) = -(dini/6.0d0)*InD(2)
+        X(5) = vini
     end if
 
 	call get_V(Nx,X,lb,V)
@@ -351,6 +371,7 @@ end do
 	V(2)  = -((X(2)*X(2))/3.0d0)-(X(1)/2.0d0)+lb-6.0*(X(3)*X(3))
 	V(3)  = -(2.0d0/3.0d0)*X(2)*X(3)- X(4) + X(3)*X(3)
 	V(4)  = -3.0*X(4)*X(3)- X(2)*X(4) - 0.5d0*X(1)*X(3)
+    V(5)  = X(5)*X(2)
 
         end subroutine
 
