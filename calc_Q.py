@@ -35,7 +35,7 @@ def radial_cumsum(arr_3d, center):
 
     # Calculate the cumulative sum
     cumulative_sum = np.cumsum(sorted_arr)
-
+    cumulative_sum[flat_radial_distances[sorted_indices] > 32] = np.nan
     return cumulative_sum, sorted_indices
 
 def reshape_radial_cumsum(original_shape, cumulative_sum, sorted_indices):
@@ -86,9 +86,6 @@ a_f = 1 / (1 + z_f)  # Final scale factor
 t_f = t_0 * a_f ** (3 / 2)  # Final time
 t = np.array([t_i, t_f])
 
-def rho_eds(i):
-    return 3 * c ** 2 * ((2 / (3 * t[i])) ** 2 / (8 * np.pi * G))
-
 def a_eds(i):
     return (t[i] / t_0) ** (2 / 3)
 
@@ -99,17 +96,36 @@ def theta_eds(i):
   return 3*a_eds_dt(i)/a_eds(i)
 
 # Load data
-rho_f = np.load("data/grid_rho1.npy")*rho_eds(1)
 theta_f = np.load("data/grid_theta1.npy")*theta_eds(1)
 sigma_f = np.load("data/grid_sigma1.npy")*theta_eds(1)/3
-weyl_f = np.load("data/grid_weyl1.npy")
 V_f = np.load("data/grid_V1.npy")
 
-rho_i = np.load("data/grid_rho0.npy")*rho_eds(0)
 theta_i = np.load("data/grid_theta0.npy")*theta_eds(0)
 sigma_i = np.load("data/grid_sigma0.npy")*theta_eds(0)/3
-weyl_i = np.load("data/grid_weyl0.npy")
 V_i = np.load("data/grid_V0.npy")
+
+params_all_1100 = np.load("data/params_z1100_all_ic_True.npy")
+params_all_0    = np.load("data/params_z0_all_ic_True.npy")
+
+theta_i = params_all_1100[:,1].reshape(64,64,64)*theta_eds(0)
+sigma_i = params_all_1100[:,2].reshape(64,64,64)*theta_eds(0)/3
+V_i = params_all_1100[:,4].reshape(64,64,64)
+
+theta_f = params_all_0[:,1].reshape(64,64,64)*theta_eds(1)
+sigma_f = params_all_0[:,2].reshape(64,64,64)*theta_eds(1)/3
+V_f = params_all_0[:, 4].reshape(64, 64, 64)
+
+
+params_dens_1100 = np.load("data/params_z1100_all_ic_False.npy")
+params_dens_0    = np.load("data/params_z0_all_ic_False.npy")
+
+theta_i = params_dens_1100[:,1].reshape(64,64,64)*theta_eds(0)
+sigma_i = params_dens_1100[:,2].reshape(64,64,64)*theta_eds(0)/3
+V_i = params_dens_1100[:,4].reshape(64,64,64)
+
+theta_f = params_dens_0[:,1].reshape(64,64,64)*theta_eds(1)
+sigma_f = params_dens_0[:,2].reshape(64,64,64)*theta_eds(1)/3
+V_f = params_dens_0[:, 4].reshape(64, 64, 64)
 
 # Assuming the center is the middle of the array
 center_f = tuple(np.array(theta_f.shape) // 2)
@@ -129,7 +145,7 @@ sigma_Qf_radial = sigma_Vf_cumsum / Vf_cumsum
 theta2_Qf_radial = theta2_Vf_cumsum / Vf_cumsum
 sigma2_Qf_radial = sigma2_Vf_cumsum / Vf_cumsum
 
-Q_f_radial = 2/3*(theta2_Qf_radial-theta_Qf_radial**2)-6*sigma2_Qf_radial
+Q_f_radial = 2/3*(theta2_Qf_radial-theta_Qf_radial**2)-2*sigma2_Qf_radial
 
 # Reshape Q_f_radial back to original shape
 original_shape_f = theta_f.shape
@@ -149,7 +165,7 @@ sigma_Qi_radial = sigma_Vi_cumsum / Vi_cumsum
 theta2_Qi_radial = theta2_Vi_cumsum / Vi_cumsum
 sigma2_Qi_radial = sigma2_Vi_cumsum / Vi_cumsum
 
-Q_i_radial = 2/3*(theta2_Qi_radial-theta_Qi_radial**2)-6*sigma2_Qi_radial
+Q_i_radial = 2/3*(theta2_Qi_radial-theta_Qi_radial**2)-2*sigma2_Qi_radial
 
 # Reshape Q_i_radial back to original shape
 original_shape_i = theta_i.shape
@@ -165,7 +181,7 @@ plt.colorbar()
 plt.title("Q_i")
 plt.show()
 
-
+"""
 plt.imshow(np.log(Q_f_reshaped[:,:,32]))
 plt.colorbar()
 plt.title("log(Q_f)")
@@ -175,3 +191,4 @@ plt.imshow(np.log(Q_i_reshaped[:,:,32]))
 plt.colorbar()
 plt.title("log(Q_i)")
 plt.show()
+"""

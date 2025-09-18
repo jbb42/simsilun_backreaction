@@ -8,7 +8,7 @@ from numba import njit, prange
 # Defining constants
 k_max = 1e-13#2e-13#2e-7 # why 1e-6 times original??
 g_size = 64
-r_b = g_size/2
+r_b = 24#g_size/2
 m = 4
 n = 4
 small = 1e-3  # do not make smaller
