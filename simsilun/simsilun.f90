@@ -17,7 +17,7 @@
 ! density and Weyl are x 8pi G/c^2
 ! expansion and shear are x 1/c
 
-    integer, parameter :: Ni = 64*64*64  ! dimension of the initial data vector
+    integer, parameter :: Ni = 32**3!128**3!64*64*64  ! dimension of the initial data vector
 
       ! Make large arrays allocatable
       double precision, allocatable :: Din(:), Ein(:), Sin(:), Win(:), Vin(:)
@@ -94,12 +94,12 @@ end do
 
 
 ! output: initial density contrast ($1) vs final density in the Silent Universe ($2) and Einstein-de Sitter model ($3)
-	open(21,file='density')
+	open(21,file='../data/simsilun_output/density')
 	do I=1,Ni
   	   write(21,*) Din(I),Rout(I),Reds(I)
 	enddo
 
-	open(22,file='params')
+	open(22,file='../data/simsilun_output/params')
 	do I=1,Ni
   	   write(22,*) dens(I),expa(I),shea(I),weyl(I),Vol(I)
 	enddo
@@ -115,7 +115,7 @@ end do
         double precision cpar(30)
         double precision zo,zz,zf,cto,ctf
         double precision, intent(in) :: z_i, z_f, H_0
-
+    logical all_ic
 ! InD(1) = initial time instant
 ! InD(2) = background's density
 ! InD(3) = background's expansion rate
@@ -152,32 +152,32 @@ end do
 !	Din(I) = -0.00095+0.000001*I
 !	enddo
 
-        open(unit=10, file="rho_i", status="old", action="read")
+        open(unit=10, file="../data/ics/rho_i", status="old", action="read")
             do i = 1, Ni
                 read(10, *) Din(i)
                 Din(i) = Din(i)-1.0
         end do
         close(10)
-
-        open(unit=11, file="theta_i", status="old", action="read")
+    if(all_ic) then
+        open(unit=11, file="../data/ics/theta_i", status="old", action="read")
             do i = 1, Ni
                 read(11, *) Ein(i)
         end do
         close(11)
 
-        open(unit=12, file="sigma_i", status="old", action="read")
+        open(unit=12, file="../data/ics/sigma_i", status="old", action="read")
             do i = 1, Ni
                 read(12, *) Sin(i)
         end do
         close(12)
 
-        open(unit=13, file="weyl_i", status="old", action="read")
+        open(unit=13, file="../data/ics/weyl_i", status="old", action="read")
             do i = 1, Ni
                 read(13, *) Win(i)
         end do
         close(13)
-
-        open(unit=14, file="V_i", status="old", action="read")
+    end if
+        open(unit=14, file="../data/ics/V_i", status="old", action="read")
         do i = 1, Ni
             read(14, *) Vin(i)
         end do

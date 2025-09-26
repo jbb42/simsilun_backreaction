@@ -19,5 +19,3 @@ __pycache__/
 *.nav
 *.snm
 *.latexmkrc
-# Editors
-settings.json
