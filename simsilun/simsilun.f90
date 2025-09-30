@@ -427,7 +427,7 @@ end do
 
 ! cosmological parameters / Planck 2015 (TT+lowP+lensing)
 	omega_matter = 0.3!0.99999!0.308
-	omega_lambda = 1.0 - omega_matter - 0.5
+	omega_lambda = 1.0 - omega_matter
 	!H0 = 70!67.810d0
 	  if(omega_lambda/=(1.0 - omega_matter)) then
 	   print *, 'The code uses the LCDM model to set up '
