@@ -17,7 +17,7 @@
 ! density and Weyl are x 8pi G/c^2
 ! expansion and shear are x 1/c
 
-    integer, parameter :: Ni = 32**3!128**3!64*64*64  ! dimension of the initial data vector
+    integer, parameter :: Ni = 64**3!128**3!64*64*64  ! dimension of the initial data vector
 
       ! Make large arrays allocatable
       double precision, allocatable :: Din(:), Ein(:), Sin(:), Win(:), Vin(:)
@@ -55,7 +55,7 @@
 
 
 ! load initial data: density contrast vector deli(Ni) and other data in InD(10)
-	call initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,Vin,z_i,z_f,H_0)
+	call initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,Vin,z_i,z_f,H_0,all_ic)
 
 
 	Rout = 0.0d0
@@ -108,7 +108,7 @@ end do
 
 !=====================================================
 
-	subroutine initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,Vin,z_i,z_f,H_0)
+	subroutine initial_data(cpar,InD,Ni,Din,Ein,Sin,Win,Vin,z_i,z_f,H_0, all_ic)
 	implicit none
 	integer I,Ni
 	double precision InD(10),Din(Ni),Ein(Ni),Sin(Ni),Win(Ni),Vin(Ni)
@@ -151,13 +151,13 @@ end do
 !	do I=1,Ni
 !	Din(I) = -0.00095+0.000001*I
 !	enddo
-
         open(unit=10, file="../data/ics/rho_i", status="old", action="read")
             do i = 1, Ni
                 read(10, *) Din(i)
                 Din(i) = Din(i)-1.0
         end do
         close(10)
+
     if(all_ic) then
         open(unit=11, file="../data/ics/theta_i", status="old", action="read")
             do i = 1, Ni
@@ -177,6 +177,7 @@ end do
         end do
         close(13)
     end if
+
         open(unit=14, file="../data/ics/V_i", status="old", action="read")
         do i = 1, Ni
             read(14, *) Vin(i)
@@ -231,7 +232,7 @@ end do
         X(2) = InD(3)*(1.0d0 -(dini/3.0d0) )
         X(3) = (dini/9.0d0)*InD(3)
         X(4) = -(dini/6.0d0)*InD(2)
-        X(5) = vini
+        X(5) = vini ! CALCULATE LCDM BG VOLUME INSTEAD
     end if
 
 	call get_V(Nx,X,lb,V)
@@ -399,18 +400,18 @@ end do
          tzo = (dsqrt((4d0)/(3d0*lb)))*arsh
          ct = tzo
          ctt = ct
-         print *, "LCDM time", ctt
+         print *, "LCDM time", ctt / szpar(6)
 
                  ! Einstein-de Sitter time-redshift relation
-        lu=3.085678d19
-	    tu=31557600*1d6
-        Ho = (tu/(lu))*H_0
-        a = 1.0d0 / (1.0d0 + zo)   ! scale factor at redshift zo
-        tzo = (2.0d0 / (3.0d0*Ho)) * a**1.5
-        ct  = tzo * szpar(6)
-        ctt = ct
+!       lu=3.085678d19
+!	    tu=31557600*1d6
+!       Ho = (tu/(lu))*H_0
+!       a = 1.0d0 / (1.0d0 + zo)   ! scale factor at redshift zo
+!       tzo = (2.0d0 / (3.0d0*Ho)) * a**1.5
+!       ct  = tzo * szpar(6)
+!       ctt = ct
 
-         print *, "EdS time", ctt
+!       print *, "EdS time", ctt / szpar(6)
 
 	end
 
@@ -425,8 +426,8 @@ end do
 	pi = 4d0*datan(1.0d0)
 
 ! cosmological parameters / Planck 2015 (TT+lowP+lensing)
-	omega_matter = 0.99999!0.308
-	omega_lambda = 1.0 - omega_matter
+	omega_matter = 0.3!0.99999!0.308
+	omega_lambda = 1.0 - omega_matter - 0.5
 	!H0 = 70!67.810d0
 	  if(omega_lambda/=(1.0 - omega_matter)) then
 	   print *, 'The code uses the LCDM model to set up '

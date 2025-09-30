@@ -87,7 +87,7 @@ def plot_grid(name, grid, coords, cbar_label, slice_axis=2, slice_index=None):
     fig.text(0.30, 0.17, "Difference", ha='center', va='center', rotation=90, fontsize=14)
     fig.text(0.10, 0.10, name, ha='center', va='center', rotation=0, fontsize=28)
     plt.tight_layout()
-    plt.savefig(f"plots/{name}.pdf")
+    plt.savefig(f"../plots/{name}.pdf")
     plt.show()
     plt.close(fig)
 
@@ -119,6 +119,7 @@ np.savetxt("../data/ics/V_i", V_i.reshape(g_size ** 3))
 
 
 # --- Simsilun runs ---
+
 runs = {
     "sim_f": run_simsilun(z_i, z_f, True),
     "sim_i": run_simsilun(z_i, z_i, True),
