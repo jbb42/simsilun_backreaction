@@ -451,7 +451,6 @@ end do
 	gkr=3d0*(((Ho)**2)/(8d0*pi*gcons))
 	lb=3d0*omega_lambda*(((Ho)**2)/(cs*cs))
 	gkr=kapc2*gkr*omega_matter
-
 	cpar(1) = H_0*1d-2
 	cpar(2) = Ho/cs
 	cpar(3) = omega_matter
