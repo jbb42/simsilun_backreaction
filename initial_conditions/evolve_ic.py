@@ -63,7 +63,7 @@ rho /= cell_volume
 # Compute mean density and density contrast
 rho_bar = masses.sum() / (box_size ** 3)
 delta = rho / rho_bar - 1.0
-
+np.save("../data/ics/delta.npy", delta)
 # Visualize central slice of density contrast
 slice_index = grid_size // 2
 plt.figure(figsize=(8, 6))
@@ -73,7 +73,7 @@ plt.title(f'Density Contrast Slice at Z={slice_index}')
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.tight_layout()
-plt.savefig('../plots/density_contrast_slice.png')
+#plt.savefig('../plots/density_contrast_slice.png')
 plt.show()
 
 rho_i = delta + np.ones_like(64**3)

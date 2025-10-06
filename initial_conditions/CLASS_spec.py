@@ -7,15 +7,15 @@ run_dir = here / "data"
 run_dir.mkdir(parents=True, exist_ok=True)
 
 root_base   = run_dir / "class"   # CLASS will add 00_, 01_, ... to avoid overwrite
-z_out       = 99
+z_out       = 90
 CLASS_EXE   = Path("../class_public/class")  # adjust if needed
 
 # ---- write minimal INI for S-GenIC (CAMB layout, density transfer only) ----
 ini = textwrap.dedent(f"""
-h = 0.67
-omega_b = 0.02237
-omega_cdm = 0.1200
-Omega_k = 0.5
+h = 0.70
+Omega_m = 0.3
+Omega_l = 0.7
+Omega_k = 0.0
 A_s = 2.1e-9
 n_s = 0.965
 tau_reio = 0.054

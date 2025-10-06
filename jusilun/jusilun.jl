@@ -1,13 +1,15 @@
 using Statistics
 using PyPlot
 pygui(true)
+using NPZ
+using Base.Threads: @threads
 
 # Parameters & units (feel free to change)
 g_size = 64
 H_0_km_s_Mpc = 70.0
 Ω_m = 0.3
 Ω_Λ = 1.0 - Ω_m
-z_i = 80.0
+z_i = 90.0
 z_f = 0.0
 
 # Simsilun units
@@ -24,9 +26,11 @@ H_0 = tu / lu * H_0_km_s_Mpc
 ρ_0 = 3 * Ω_m * H_0^2 / c^2 
 
 # Initial conditions
-δ_i = [exp(-((x - g_size/2)^2 + (y - g_size/2)^2) / 100.0) for y in 1:g_size, x in 1:g_size]
-δ_i = vec(δ_i)  # same order as jusilun.jl
-
+#δ_i = npzread("data/np_arrays_LTB/grid_rho0.npy").-1.0
+δ_i = npzread("data/ics/delta.npy")
+δ_i = reshape(δ_i, g_size^3)
+#δ_i = [exp(-((x - g_size/2)^2 + (y - g_size/2)^2 + (z - g_size/2)^2) / 100.0) for z in 1:g_size, y in 1:g_size, x in 1:g_size]
+#δ_i = vec(δ_i)  # same order as jusilun.jl
 ρ_bg_i = ρ_0 * (1 + z_i)^3
 Θ_bg_i = 3 * (H_0/c) * sqrt(Ω_m * (1 + z_i)^3 + Ω_Λ)
 
@@ -37,10 +41,10 @@ W_vec = .-(ρ_bg_i .* δ_i) ./ 6
 V_vec = ones(length(ρ_vec))  # CHANGE THIS
 
 # Plot density
-function plot_density(ρ_vec; grid=64, plt_title=" ")
-    grid_img = reshape(ρ_vec, grid, grid)'  # transpose for x right, y up
+function plot_density(ρ_vec; grid=g_size, plt_title=" ")
+    grid_img = reshape(ρ_vec, grid, grid, grid)
     figure(figsize=(6,6))
-    imshow(grid_img; origin="lower", cmap="viridis", aspect="equal")
+    imshow(grid_img[:,:,32]'/grid_img[1,1,1]; origin="lower", cmap="viridis", aspect="equal")
     colorbar()
     title(plt_title)
     tight_layout()
@@ -50,9 +54,7 @@ end
 # Plot initial density
 plot_density(ρ_vec, grid=g_size, plt_title="Initial Density Distribution at z=$z_i")
 
-# ---------------------
-# ODE step (RK4) with correct geometric sources
-# ---------------------
+# RK4 step
 function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
     N = length(ρ_vec)
 
@@ -66,7 +68,7 @@ function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
         return dρ, dΘ, dΣ, dW, dV
     end
 
-    @inbounds for i in 1:N
+    @inbounds @threads for i in 1:N
         if frozen[i]; continue; end
 
         ρ, Θ, Σ, W, V = ρ_vec[i], Θ_vec[i], Σ_vec[i], W_vec[i], V_vec[i]
@@ -81,35 +83,36 @@ function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
                          Σ + dt*k3[3], W + dt*k3[4], V + dt*k3[5])
 
         # RK4 update
-        ρ_new = ρ + dt*(k1[1] + 2k2[1] + 2k3[1] + k4[1])/6
-        Θ_new = Θ + dt*(k1[2] + 2k2[2] + 2k3[2] + k4[2])/6
-        Σ_new = Σ + dt*(k1[3] + 2k2[3] + 2k3[3] + k4[3])/6
-        W_new = W + dt*(k1[4] + 2k2[4] + 2k3[4] + k4[4])/6
-        V_new = V + dt*(k1[5] + 2k2[5] + 2k3[5] + k4[5])/6
-
-        ρ_vec[i] = ρ_new
-        Θ_vec[i] = max(Θ_new, 0.0)
-        Σ_vec[i] = Σ_new
-        W_vec[i] = W_new
-        V_vec[i] = V_new
+        ρ_vec[i] = ρ + dt*(k1[1] + 2k2[1] + 2k3[1] + k4[1])/6
+        Θ_vec[i] = Θ + dt*(k1[2] + 2k2[2] + 2k3[2] + k4[2])/6
+        Σ_vec[i] = Σ + dt*(k1[3] + 2k2[3] + 2k3[3] + k4[3])/6
+        W_vec[i] = W + dt*(k1[4] + 2k2[4] + 2k3[4] + k4[4])/6   
+        V_vec[i] = V + dt*(k1[5] + 2k2[5] + 2k3[5] + k4[5])/6
 
         # collapse → freeze
-        if Θ_new <= 0.0
+        if Θ_vec[i] <= 0.0
+            Θ_vec[i] = 0.0
             frozen[i] = true
         end
     end
 end
 
-
+# Evolve universe until <H> = H_0
 function evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ)
     frozen = falses(length(ρ_vec))
     H_avg = mean(Θ_vec) / 3
+    step = 0
     while H_avg >= H_0/c
         dt = min(1e-3 / maximum(Θ_vec .+ Σ_vec ./ 3))
 
         rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
         H_avg = mean(Θ_vec)/3 
 
+        if step % 100 == 0
+            println("Step $step: H_avg=$(H_avg/H_0*c)H_0, frozen=$(count(frozen))")
+        end
+
+        step += 1
         # all frozen? then done
         if all(frozen)
             break

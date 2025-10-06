@@ -5,6 +5,5 @@
     <mapping directory="$PROJECT_DIR$/initial_conditions/S-GenIC" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/initial_conditions/S-GenIC/GadgetReader" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/initial_conditions/S-GenIC/GadgetReader/bigfile" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/initial_conditions/class_public" vcs="Git" />
   </component>
 </project>

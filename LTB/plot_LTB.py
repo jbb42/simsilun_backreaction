@@ -4,12 +4,12 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-from LTB.LTB_model import evolve_LTB
+from LTB_model import evolve_LTB
 
 # --- Parameters ---
 z_i, z_f, H_0 = 1100, 0, 70
-usefiles=True
-g_size = 32
+usefiles=False
+g_size = 64
 coords = (np.arange(g_size) - (g_size - 1) / 2)
 
 ROW_LABELS = ["z = " + str(z_i), "z = " + str(z_f), "Difference"]

@@ -1,4 +1,4 @@
 {
-    "explorer.excludeGitIgnore": true
-
+    "explorer.excludeGitIgnore": true,
+    "julia.NumThreads": 8
 }

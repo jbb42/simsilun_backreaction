@@ -7,7 +7,7 @@ from numba import njit, prange
 """Constants"""
 # Defining constants
 k_max = 1e-13#2e-13#2e-7 # why 1e-6 times original??
-g_size = 32#64
+g_size = 64#64
 r_b = g_size // 2 # 24
 m = 4
 n = 4

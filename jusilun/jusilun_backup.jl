@@ -1,9 +1,10 @@
 using Statistics
 using PyPlot
 pygui(true)
+using Base.Threads: @threads
 
 # Parameters & units (feel free to change)
-g_size = 64
+g_size = 64*8
 H_0_km_s_Mpc = 70.0
 Ω_m = 0.3
 Ω_Λ = 1.0 - Ω_m
@@ -48,11 +49,9 @@ function plot_density(ρ_vec; grid=64, plt_title=" ")
 end
 
 # Plot initial density
-plot_density(ρ_vec, grid=g_size, plt_title="Initial Density Distribution at z=$z_i")
+#plot_density(ρ_vec, grid=g_size, plt_title="Initial Density Distribution at z=$z_i")
 
-# ---------------------
-# ODE step (RK4) with correct geometric sources
-# ---------------------
+# RK4 step
 function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
     N = length(ρ_vec)
 
@@ -66,7 +65,7 @@ function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
         return dρ, dΘ, dΣ, dW, dV
     end
 
-    @inbounds for i in 1:N
+    @inbounds @threads for i in 1:N
         if frozen[i]; continue; end
 
         ρ, Θ, Σ, W, V = ρ_vec[i], Θ_vec[i], Σ_vec[i], W_vec[i], V_vec[i]
@@ -81,35 +80,36 @@ function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
                          Σ + dt*k3[3], W + dt*k3[4], V + dt*k3[5])
 
         # RK4 update
-        ρ_new = ρ + dt*(k1[1] + 2k2[1] + 2k3[1] + k4[1])/6
-        Θ_new = Θ + dt*(k1[2] + 2k2[2] + 2k3[2] + k4[2])/6
-        Σ_new = Σ + dt*(k1[3] + 2k2[3] + 2k3[3] + k4[3])/6
-        W_new = W + dt*(k1[4] + 2k2[4] + 2k3[4] + k4[4])/6
-        V_new = V + dt*(k1[5] + 2k2[5] + 2k3[5] + k4[5])/6
-
-        ρ_vec[i] = ρ_new
-        Θ_vec[i] = max(Θ_new, 0.0)
-        Σ_vec[i] = Σ_new
-        W_vec[i] = W_new
-        V_vec[i] = V_new
+        ρ_vec[i] = ρ + dt*(k1[1] + 2k2[1] + 2k3[1] + k4[1])/6
+        Θ_vec[i] = Θ + dt*(k1[2] + 2k2[2] + 2k3[2] + k4[2])/6
+        Σ_vec[i] = Σ + dt*(k1[3] + 2k2[3] + 2k3[3] + k4[3])/6
+        W_vec[i] = W + dt*(k1[4] + 2k2[4] + 2k3[4] + k4[4])/6   
+        V_vec[i] = V + dt*(k1[5] + 2k2[5] + 2k3[5] + k4[5])/6
 
         # collapse → freeze
-        if Θ_new <= 0.0
+        if Θ_vec[i] <= 0.0
+            Θ_vec[i] = 0.0
             frozen[i] = true
         end
     end
 end
 
-
+# Evolve universe until <H> = H_0
 function evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ)
     frozen = falses(length(ρ_vec))
     H_avg = mean(Θ_vec) / 3
+    step = 0
     while H_avg >= H_0/c
         dt = min(1e-3 / maximum(Θ_vec .+ Σ_vec ./ 3))
 
         rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
         H_avg = mean(Θ_vec)/3 
 
+        if step % 100 == 0
+            println("Step $step: H_avg=$(H_avg/H_0*c)H_0, frozen=$(count(frozen))")
+        end
+
+        step += 1
         # all frozen? then done
         if all(frozen)
             break
@@ -122,4 +122,4 @@ end
 ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec = evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ=Λ)
 
 
-plot_density(ρ_vec, grid=g_size, plt_title="Final Density Distribution at z=$z_f")
+#plot_density(ρ_vec, grid=g_size, plt_title="Final Density Distribution at z=$z_f")
