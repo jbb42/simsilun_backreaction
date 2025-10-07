@@ -94,7 +94,7 @@ z_i = readheader(snapshot, 'redshift')
 z_f = 0
 H0 = readheader(snapshot, 'hubble')*100
 
-run_simsilun(z_i, z_f, H0, False)
+#run_simsilun(z_i, z_f, H0, False)
 
 p = np.loadtxt("../data/simsilun_output/params").reshape(-1, 5)
 dens = p[:,0].reshape(grid_size,grid_size,grid_size)

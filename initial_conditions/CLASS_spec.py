@@ -1,57 +1,68 @@
-from pathlib import Path
-import subprocess, shutil, textwrap, re
+from classy import Class
+import subprocess
+import numpy as np
 
-# ---- config ----
-here = Path(__file__).resolve().parent
-run_dir = here / "data"
-run_dir.mkdir(parents=True, exist_ok=True)
+z = 90.0
 
-root_base   = run_dir / "class"   # CLASS will add 00_, 01_, ... to avoid overwrite
-z_out       = 90
-CLASS_EXE   = Path("../class_public/class")  # adjust if needed
+# create instance of the class "Class"
+cosmo = Class()
+# pass input parameters
+cosmo.set({'h': 0.70,
+               'Omega_m': 0.3,
+               'Omega_Lambda': 0.7,
+               'Omega_k': 0.0,
+               'A_s': 2.1e-9,
+               'n_s': 0.965,
+               'tau_reio' :0.054,
 
-# ---- write minimal INI for S-GenIC (CAMB layout, density transfer only) ----
-ini = textwrap.dedent(f"""
-h = 0.70
-Omega_m = 0.3
-Omega_l = 0.7
-Omega_k = 0.0
-A_s = 2.1e-9
-n_s = 0.965
-tau_reio = 0.054
+               'output': 'mPk,dTk',
+               'z_pk': z,
+               'format':'camb',
+               'headers': 'yes',
+               'P_k_max_h/Mpc': 100,  # extend upper range if needed
+           })
+# run class
+cosmo.compute()
+# --- extract transfer functions ---
+transfers = cosmo.get_transfer(z)
 
-output = mPk,dTk
-z_pk = {z_out}
-P_k_max_h/Mpc = 100
+# k in h/Mpc
+k_hMpc = np.array(transfers["k (h/Mpc)"])
+h = cosmo.h()  # reduced Hubble
+k_Mpc = k_hMpc * h  # convert to 1/Mpc
 
-format = camb           # CAMB text layout
-headers = no
-root = {root_base.as_posix()}
+# species you care about
+species = ["d_cdm", "d_b", "d_g", "d_ur", "d_tot"]
 
-input_verbose = 1
-output_verbose = 1
-""").strip() + "\n"
+# build rescaled dictionary
+Tk_rescaled = {}
+for sp in species:
+    Ti = np.array(transfers[sp])
+    Tk_rescaled[sp] = -Ti / (k_Mpc**2)
 
-ini_path = run_dir / f"write_camb_{z_out}.ini"
-ini_path.write_text(ini)
+# --- save in CAMB-like format ---
+header = (
+    f"k [h/Mpc]  " + "  ".join([f"-T_{sp}/k^2" for sp in species])
+)
+data = np.column_stack([k_hMpc] + [Tk_rescaled[sp] for sp in species])
+np.savetxt(f"data/classy_Tk_z{int(z)}.dat", data, header=header)
 
+print(f"Saved Tk table with {len(k_hMpc)} k-modes at z={z}")
 
-# ---- clean up old CLASS output so it won't append 00_, 01_, ...
-for f in run_dir.glob(f"{root_base.name}*"):
-    if f.is_file():
-        f.unlink()
-    else:
-        shutil.rmtree(f)
+# after your existing get_transfer() call
+k_hMpc = np.array(transfers["k (h/Mpc)"])
+h = cosmo.h()
+z = 90.0
 
-# ---- run CLASS CLI and capture stdout so we can parse the effective root ----
-res = subprocess.run([str(CLASS_EXE), str(ini_path)],
-                     cwd=run_dir, capture_output=True, text=True)
-print(res.stdout)
-if res.returncode != 0:
-    print(res.stderr)
-    raise RuntimeError("CLASS CLI failed")
-else:
-    subprocess.run(
-        ["mpiexec", "-np", "1", "./N-GenIC", "ngenic.param"],
-        cwd="/home/jbb/Documents/simsilun_backreaction/initial_conditions/S-GenIC"
-    )
+# P(k) in (Mpc/h)^3, same k-grid
+Pk = np.array([cosmo.pk(k * h, z) * h**3 for
+               k in k_hMpc])
+
+data = np.column_stack([k_hMpc] + [Pk])
+np.savetxt(f"data/classy_Pk_z{int(z)}.dat", data)
+
+print(f"Saved Tk table with {len(k_hMpc)} k-modes at z={z}")
+
+subprocess.run(
+    ["mpiexec", "-np", "1", "./N-GenIC", "ngenic.param"],
+    cwd="/home/jbb/Documents/simsilun_backreaction/initial_conditions/S-GenIC")
