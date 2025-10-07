@@ -8,7 +8,7 @@ using Base.Threads: @threads
 g_size = 64
 H_0_km_s_Mpc = 70.0
 Ω_m = 0.3
-Ω_Λ = 1.0 - Ω_m
+Ω_Λ = 0.2#1.0 - Ω_m
 z_i = 90.0
 z_f = 0.0
 
@@ -29,10 +29,11 @@ H_0 = tu / lu * H_0_km_s_Mpc
 #δ_i = npzread("data/np_arrays_LTB/grid_rho0.npy").-1.0
 δ_i = npzread("data/ics/delta.npy")
 δ_i = reshape(δ_i, g_size^3)
+push!(δ_i, 0.0) # add one more point for the background
 #δ_i = [exp(-((x - g_size/2)^2 + (y - g_size/2)^2 + (z - g_size/2)^2) / 100.0) for z in 1:g_size, y in 1:g_size, x in 1:g_size]
 #δ_i = vec(δ_i)  # same order as jusilun.jl
 ρ_bg_i = ρ_0 * (1 + z_i)^3
-Θ_bg_i = 3 * (H_0/c) * sqrt(Ω_m * (1 + z_i)^3 + Ω_Λ)
+Θ_bg_i = 3 * (H_0/c) * sqrt(Ω_m * (1 + z_i)^3 + Ω_Λ + (1 - Ω_m - Ω_Λ) * (1 + z_i)^2)
 
 ρ_vec = ρ_bg_i .* (1 .+ δ_i)
 Θ_vec = Θ_bg_i .* (1 .- δ_i ./ 3)
@@ -42,9 +43,9 @@ V_vec = ones(length(ρ_vec))  # CHANGE THIS
 
 # Plot density
 function plot_density(ρ_vec; grid=g_size, plt_title=" ")
-    grid_img = reshape(ρ_vec, grid, grid, grid)
+    grid_img = reshape(ρ_vec[1:end-1], grid, grid, grid)
     figure(figsize=(6,6))
-    imshow(grid_img[:,:,32]'/grid_img[1,1,1]; origin="lower", cmap="viridis", aspect="equal")
+    imshow(grid_img[:,:,32]'/ρ_vec[end-1]; origin="lower", cmap="viridis", aspect="equal")
     colorbar()
     title(plt_title)
     tight_layout()
@@ -90,7 +91,7 @@ function rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
         V_vec[i] = V + dt*(k1[5] + 2k2[5] + 2k3[5] + k4[5])/6
 
         # collapse → freeze
-        if Θ_vec[i] <= 0.0
+        if Θ_vec[i] < 0.0
             Θ_vec[i] = 0.0
             frozen[i] = true
         end
@@ -104,12 +105,15 @@ function evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ)
     step = 0
     while H_avg >= H_0/c
         dt = min(1e-3 / maximum(Θ_vec .+ Σ_vec ./ 3))
+        if H_avg/(H_0/c) < 1.001
+            dt *= 0.01
+        end
 
         rk4_step!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec, dt, Λ, frozen)
         H_avg = mean(Θ_vec)/3 
 
         if step % 100 == 0
-            println("Step $step: H_avg=$(H_avg/H_0*c)H_0, frozen=$(count(frozen))")
+            println("Step $step:\tH_avg/H_0 = $(H_avg/H_0*c),\tfrozen=$(count(frozen))")
         end
 
         step += 1
