@@ -1,6 +1,6 @@
-[submodule "initial_conditions/S-GenIC"]
-	path = initial_conditions/S-GenIC
-	url = https://github.com/sbird/S-GenIC.git
 [submodule "initial_conditions/class_public"]
 	path = initial_conditions/class_public
 	url = https://github.com/lesgourg/class_public.git
+[submodule "initial_conditions/S-GenIC"]
+	path = initial_conditions/S-GenIC
+	url = https://github.com/sbird/S-GenIC.git
