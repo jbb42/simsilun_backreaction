@@ -2,8 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/initial_conditions/S-GenIC" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/initial_conditions/S-GenIC/GadgetReader" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/initial_conditions/S-GenIC/GadgetReader/bigfile" vcs="Git" />
   </component>
 </project>
