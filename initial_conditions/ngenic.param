@@ -2,7 +2,7 @@
 # This is the size of the FFT grid used to
 # compute the displacement field. One
 # should have Nmesh >= Npart.
-Nmesh = 64#128#64 #512
+Nmesh = 64 #128#64 #512
 # Random seed for modes in phase realisation
 Seed = 9281110
 
@@ -12,26 +12,26 @@ Box = 256000
 # Base-filename of output files
 FileBase = ICs
 # Directory for storing output files
-OutputDir = ICs/
+OutputDir = ../../data/ics/
 
 # Total matter density  (at z=0)
-Omega = 0.288
+Omega = 0.3 
 # Cosmological constant (at z=0)
-OmegaLambda = 0.712
+OmegaLambda = 0.7 
 # Baryon density        (at z=0)
 OmegaBaryon = 0.0472
 # Hubble parameter (may be used for power spec parameterization)
-HubbleParam = 0.67
+HubbleParam = 0.7 
 # Starting redshift
-Redshift = 99
+Redshift = 90 
 
 #Number of files used in output snapshot set, for ICFormat < 4.
 NumFiles = 1 #2
 # filename of tabulated MATTER powerspectrum from CAMB
-FileWithInputSpectrum = /home/jbb/Documents/simsilun_backreaction/initial_conditions/data/classy_Pk_z90.dat
+FileWithInputSpectrum = /home/jbb/Documents/simsilun_backreaction/data/ics/pk.dat
 # testdata/cambv2_matterpow_99.dat
 # filename of transfer functions from CAMB
-FileWithTransfer = /home/jbb/Documents/simsilun_backreaction/initial_conditions/data/classy_Tk_z90.dat
+FileWithTransfer = /home/jbb/Documents/simsilun_backreaction/data/ics/tk.dat
 # testdata/cambv2_transfer_99.dat
 
 # (Cube root of) number of particles

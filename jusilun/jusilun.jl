@@ -3,6 +3,7 @@ using PyPlot
 pygui(true)
 using NPZ
 using Base.Threads: @threads
+using Serialization
 
 # Parameters & units (feel free to change)
 g_size = 64
@@ -41,11 +42,26 @@ push!(δ_i, 0.0) # add one more point for the background
 W_vec = .-(ρ_bg_i .* δ_i) ./ 6
 V_vec = ones(length(ρ_vec))  # CHANGE THIS
 
+vals = Dict(
+    "ρ" => ρ_vec,
+    "Θ" => Θ_vec,
+    "Σ" => Σ_vec,
+    "W" => W_vec,
+    "V" => V_vec,
+    "H_0" => H_0_km_s_Mpc,
+    "Ω_m" => Ω_m,
+    "Ω_Λ" => Ω_Λ,
+    "z_i" => z_i,
+    "z_f" => z_f
+)
+
+serialize("initial_vals.jls", vals)
+
 # Plot density
 function plot_density(ρ_vec; grid=g_size, plt_title=" ")
     grid_img = reshape(ρ_vec[1:end-1], grid, grid, grid)
     figure(figsize=(6,6))
-    imshow(grid_img[:,:,32]'/ρ_vec[end-1]; origin="lower", cmap="viridis", aspect="equal")
+    imshow(grid_img[:,:,Int(grid/2)]'/ρ_vec[end-1]; origin="lower", cmap="viridis", aspect="equal")
     colorbar()
     title(plt_title)
     tight_layout()
@@ -128,5 +144,19 @@ end
 
 ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec = evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ=Λ)
 
+vals = Dict(
+    "ρ" => ρ_vec,
+    "Θ" => Θ_vec,
+    "Σ" => Σ_vec,
+    "W" => W_vec,
+    "V" => V_vec,
+    "H_0" => H_0_km_s_Mpc,
+    "Ω_m" => Ω_m,
+    "Ω_Λ" => Ω_Λ,
+    "z_i" => z_i,
+    "z_f" => z_f
+)
+
+serialize("final_vals.jls", vals)
 
 plot_density(ρ_vec, grid=g_size, plt_title="Final Density Distribution at z=$z_f")
