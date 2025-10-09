@@ -1,23 +1,23 @@
 # Fdb version 4
-["biber main"] 0 "main.bcf" "main.bbl" "main" 1758280580.11213 0
+["biber main"] 0 "main.bcf" "main.bbl" "main" 1760000162.04223 0
   "main.bcf" 0 -1 0 "pdflatex"
   "reflist.bib" 0 -1 0 ""
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["makeindex main.idx"] 1758274034.63938 "main.idx" "main.ind" "main" 1758280580.11199 0
-  "main.idx" 1758280579.58413 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+["makeindex main.idx"] 1758274034.63938 "main.idx" "main.ind" "main" 1760000162.04208 0
+  "main.idx" 1760000161.44674 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
   (generated)
   "main.ilg"
   "main.ind"
   (rewritten before read)
-["pdflatex"] 1758280578.63338 "/home/jbb/Documents/simsilun_backreaction/thesis/main.tex" "main.pdf" "main" 1758280580.11242 0
-  "../plots/Backreaction.pdf" 1758201482.39891 84354 697f5b11166aa9e9c92bb0c09109aca9 ""
-  "../plots/Density.pdf" 1758201474.11983 57038 107ff5e4cd8d51f45be784b20a37fd2d ""
-  "../plots/Expansion.pdf" 1758201476.05285 57896 f9d039a7ab01f6e6048d6e4659447698 ""
-  "../plots/Shear.pdf" 1758201477.62686 56652 d9765c26d47e7d4b95c616ba04d3474b ""
-  "../plots/Volume.pdf" 1758201480.8389 56329 b0e6cc4e8e9e800d12c65164cfa2d182 ""
+["pdflatex"] 1760000160.41916 "/home/jbb/Documents/simsilun_backreaction/thesis/main.tex" "main.pdf" "main" 1760000162.04256 0
+  "../plots/Backreaction.pdf" 1759500081.1884 78397 e23776edd9ed3856126bddd608fc4f6e ""
+  "../plots/Density.pdf" 1759500068.86927 70215 6f276636c80c4bd83edca428b763fffc ""
+  "../plots/Expansion.pdf" 1759500072.96031 70258 7f467dfabc9e04c4b5c907bb9cece07b ""
+  "../plots/Shear.pdf" 1759500075.29934 68390 dc7f4cbe9ea64642eeb1f0891326720d ""
+  "../plots/Volume.pdf" 1759500079.14038 71316 d8191f18b696094f4258e058286cb0af ""
   "/home/jbb/.texlive2023/texmf-var/luatex-cache/generic/fonts/otl/lmroman10-regular.luc" 1758270324.62183 127322 7b3ec560cedc6cf6328543c6b83749ed ""
   "/home/jbb/.texlive2023/texmf-var/luatex-cache/generic/names/luaotfload-names.luc.gz" 1758272487.27513 302529 e8c830c1d97b0bec7f93c72053dae059 ""
   "/home/jbb/Documents/simsilun_backreaction/thesis/main.tex" 1758280450.41602 3671 c428ed49d731de4e9eb67eb837ae4238 ""
@@ -282,14 +282,14 @@
   "/usr/share/texlive/texmf-dist/tex/luatex/luaotfload/luaotfload.lua" 1737590400 13565 83bac25a8cf8630acccd6a7f8bb9f791 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1758204052.62846 4602002 62dba5fc29055c16380d7393a2adb07a ""
   "/var/lib/texmf/web2c/luahbtex/lualatex.fmt" 1758203808 11867982 fafabf696453b2ad76f9731c3e44898a ""
-  "Sections/LTB vs simsilun.tex" 1758280578.45076 2511 dde00be57cda21c12bb802543eca642e ""
-  "main.aux" 1758280579.9339 2574 1e5820b8d67c6ee1deb63bdd5ab93b5a "pdflatex"
+  "Sections/LTB vs simsilun.tex" 1760000160.14295 2513 866153c8d87e5f0275f59f94301bb42d ""
+  "main.aux" 1760000161.82581 2574 1e5820b8d67c6ee1deb63bdd5ab93b5a "pdflatex"
   "main.bbl" 0 -1 0 "biber main"
   "main.ind" 1758274034.70089 0 d41d8cd98f00b204e9800998ecf8427e "makeindex main.idx"
-  "main.out" 1758280579.9339 380 57ec2c86dd7d4ba0793f058ad99dfe3a "pdflatex"
-  "main.run.xml" 1758280579.93626 2343 2c74daa63c5ec0df90638ce7edd1c1b3 "pdflatex"
+  "main.out" 1760000161.82596 380 57ec2c86dd7d4ba0793f058ad99dfe3a "pdflatex"
+  "main.run.xml" 1760000161.82862 2343 2c74daa63c5ec0df90638ce7edd1c1b3 "pdflatex"
   "main.tex" 1758280450.41602 3671 c428ed49d731de4e9eb67eb837ae4238 ""
-  "main.toc" 1758280579.93626 169 cd3d46c8b6ef1c9353e7a5eed05af754 "pdflatex"
+  "main.toc" 1760000161.82862 169 cd3d46c8b6ef1c9353e7a5eed05af754 "pdflatex"
   (generated)
   "main.aux"
   "main.bcf"

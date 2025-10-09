@@ -1,6 +1,6 @@
 import numpy as np
-initial = np.load("./data/jusilun_output/initial_vals_004.npz")
-final = np.load("./data/jusilun_output/final_vals_004.npz")
+initial = np.load("./data/jusilun_output/initial_vals_005.npz")
+final = np.load("./data/jusilun_output/final_vals_005.npz")
 
 def gr_mean(arr, vol):
     return np.sum(arr*vol)/np.sum(vol)

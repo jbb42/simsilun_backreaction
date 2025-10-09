@@ -11,8 +11,8 @@ Main.include("jusilun/jusilun.jl")
 filename = "./initial_conditions/ngenic.param"  # path to your .param file
 new_values = {
     "HubbleParam": 0.70,
-    "Omega": 0.31,
-    "OmegaLambda": 0.7,
+    "Omega": 0.3,
+    "OmegaLambda": 0.71,
     "Redshift": 90,
     "Nmesh": 64,
 }
