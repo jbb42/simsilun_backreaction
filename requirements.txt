@@ -1,5 +1,9 @@
 # requirements.txt
 numpy
+classy
+scipy
+matplotlib
+julia
 
 # Install pygadgetreader from GitHub (latest main branch)
 pygadgetreader @ git+https://github.com/jveitchmichaelis/pygadgetreader.git

@@ -1,39 +1,44 @@
 import numpy as np
-initial = np.load("./data/jusilun_output/initial_vals_005.npz")
-final = np.load("./data/jusilun_output/final_vals_005.npz")
 
-def gr_mean(arr, vol):
-    return np.sum(arr*vol)/np.sum(vol)
+mu = 1.989e45  # 10^15 solar masses
+lu = 3.085678e19  # 10 kpc
+tu = 31557600.0 * 1e6  # 1 mega years
 
-theta_i_avg = gr_mean(initial["theta"], initial["V"])
-theta_f_avg = gr_mean(final["theta"], final["V"])
-theta_i_avg2= gr_mean(initial["theta"]**2, initial["V"])
-theta_f_avg2= gr_mean(final["theta"]**2, final["V"])
+G = 6.6742e-11 * mu * tu ** 2 / lu ** 3
+c = 299792458.0 * tu / lu
+kappa = 8 * np.pi * G / c**4
 
-sigma_i_avg = gr_mean(initial["sigma"], initial["V"])
-sigma_f_avg = gr_mean(final["sigma"], final["V"])
-sigma_i_avg2= gr_mean(initial["sigma"]**2, initial["V"])
-sigma_f_avg2= gr_mean(final["sigma"]**2, final["V"])
+def H0(H):
+    return tu / lu * H
 
-Q_i = 2 / 3 * (theta_i_avg2-theta_i_avg**2) - 2 * sigma_i_avg2
-Q_f = 2 / 3 * (theta_f_avg2-theta_f_avg**2) - 2 * sigma_f_avg2
+def Lambda(OmegaL, Ho):
+    return 3 * OmegaL * H0(Ho)**2 / c**2
 
-print("Q_i = ", Q_i)
-print("Q_f = ", Q_f)
 
-kappa = final["kappa"]
-Lambda = final["Lambda"]
+for i in range(34):
+    print("\nFile number:", i)
+    initial = np.load(f"./data/jusilun_output/initial_vals_{str(i).zfill(3)}.npz")
+    final   = np.load(f"./data/jusilun_output/final_vals_{str(i).zfill(3)}.npz")
+    print("Omega_m =", initial["Omega_m"], "\tOmega_Lambda =", initial["Omega_Lambda"], "\tOmega_k =", 1-initial["Omega_m"]-initial["Omega_Lambda"])
 
-rho_i_avg = gr_mean(initial["rho"], initial["V"])
-rho_f_avg = gr_mean(final["rho"], final["V"])
-R_i = 2*rho_i_avg + 6*sigma_i_avg2 - 2/3*theta_i_avg2 + 2*Lambda
-R_f = 2*rho_f_avg + 6*sigma_f_avg2 - 2/3*theta_f_avg2 + 2*Lambda
+    print("Q_i = ", initial["Q"])
+    print("Q_f = ", final["Q"])
+    print("R_i = ", initial["R"])
+    print("R_f = ", final["R"])
 
-print("R_i = ", R_i)
-print("R_f = ", R_f)
-
-print("Omega_Q_i =", -Q_i/(2/3*theta_i_avg**2))
-print("Omega_Q_f =", -Q_f/(2/3*theta_f_avg**2))
-
-print("Omega_R_i =", -R_i/(2/3*theta_i_avg**2))
-print("Omega_R_f =", -R_f/(2/3*theta_f_avg**2))
+    print("Omega_Q_i =", -initial["Q"]/(6*initial["H"]**2))
+    print("Omega_Q_f =", -final["Q"]/(6*final["H"]**2))
+    print("Omega_R_i =", -initial["R"]/(6*initial["H"]**2))
+    print("Omega_R_f =", -final["R"]/(6*final["H"]**2))
+    print("Omega_L_i =", Lambda(initial["Omega_Lambda"], initial["H_0"])/(3*initial["H"]**2))
+    print("Omega_L_f =", Lambda(initial["Omega_Lambda"], final["H_0"])/(3*final["H"]**2))
+    print("Omega_m_i =", np.sum(initial["rho"]*initial["V"])/np.sum(initial["V"])/(3*initial["H"]**2))
+    print("Omega_m_f =", np.sum(final["rho"]*final["V"])/np.sum(final["V"])/(3*final["H"]**2))
+    print("Omega_t_i =", -initial["Q"]/(6*initial["H"]**2) -
+          initial["R"]/(6*initial["H"]**2) +
+          Lambda(initial["Omega_Lambda"], initial["H_0"])/(3*initial["H"]**2) +
+          np.sum(initial["rho"]*initial["V"])/np.sum(initial["V"])/(3*initial["H"]**2))
+    print("Omega_t_f =", -final["Q"]/(6*final["H"]**2) -
+          final["R"]/(6*final["H"]**2) +
+          Lambda(initial["Omega_Lambda"], final["H_0"])/(3*final["H"]**2) +
+          np.sum(final["rho"]*final["V"])/np.sum(final["V"])/(3*final["H"]**2))
