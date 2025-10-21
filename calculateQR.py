@@ -15,11 +15,14 @@ def Lambda(OmegaL, Ho):
     return 3 * OmegaL * H0(Ho)**2 / c**2
 
 
-for i in range(34):
+for i in range(44):
     print("\nFile number:", i)
     initial = np.load(f"./data/jusilun_output/initial_vals_{str(i).zfill(3)}.npz")
     final   = np.load(f"./data/jusilun_output/final_vals_{str(i).zfill(3)}.npz")
-    print("Omega_m =", initial["Omega_m"], "\tOmega_Lambda =", initial["Omega_Lambda"], "\tOmega_k =", 1-initial["Omega_m"]-initial["Omega_Lambda"])
+    print("Omega_m =", initial["Omega_m"],
+          "\tOmega_Lambda =", initial["Omega_Lambda"],
+          "\tOmega_k =", 1-initial["Omega_m"]-initial["Omega_Lambda"],
+          "\tH_0 =", initial["H_0"])
 
     print("Q_i = ", initial["Q"])
     print("Q_f = ", final["Q"])
@@ -28,8 +31,8 @@ for i in range(34):
 
     print("Omega_Q_i =", -initial["Q"]/(6*initial["H"]**2))
     print("Omega_Q_f =", -final["Q"]/(6*final["H"]**2))
-    print("Omega_R_i =", -initial["R"]/(6*initial["H"]**2))
-    print("Omega_R_f =", -final["R"]/(6*final["H"]**2))
+    print("Omega_k_i =", -initial["R"]/(6*initial["H"]**2))
+    print("Omega_k_f =", -final["R"]/(6*final["H"]**2))
     print("Omega_L_i =", Lambda(initial["Omega_Lambda"], initial["H_0"])/(3*initial["H"]**2))
     print("Omega_L_f =", Lambda(initial["Omega_Lambda"], final["H_0"])/(3*final["H"]**2))
     print("Omega_m_i =", np.sum(initial["rho"]*initial["V"])/np.sum(initial["V"])/(3*initial["H"]**2))

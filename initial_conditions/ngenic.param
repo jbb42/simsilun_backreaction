@@ -2,10 +2,10 @@
 # This is the size of the FFT grid used to
 # compute the displacement field. One
 # should have Nmesh >= Npart.
-Nmesh = 64 
+Nmesh = 256 
 
 # Random seed for modes in phase realisation
-Seed = 526953 
+Seed = 272946 
 
 # Periodic box size of simulation
 Box = 256000
@@ -16,9 +16,9 @@ FileBase = ICs
 OutputDir = ../../data/ics/
 
 # Total matter density  (at z=0)
-Omega = 0.3 
+Omega = 1 
 # Cosmological constant (at z=0)
-OmegaLambda = 0.7 
+OmegaLambda = 0 
 # Baryon density        (at z=0)
 OmegaBaryon = 0.0472
 # Hubble parameter (may be used for power spec parameterization)
@@ -37,9 +37,9 @@ FileWithTransfer = ../../data/ics/tk.dat
 
 # (Cube root of) number of particles
 # Baryons (type 0)
-NBaryon = 16 
+NBaryon = 256 
 # CDM (type 1)
-NCDM = 16 
+NCDM = 256 
 # Neutrinos (type 2)
 NNeutrino = 0
 
