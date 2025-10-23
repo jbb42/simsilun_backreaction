@@ -17,7 +17,7 @@
 ! density and Weyl are x 8pi G/c^2
 ! expansion and shear are x 1/c
 
-    integer, parameter :: Ni = 128**3!128**3!64*64*64  ! dimension of the initial data vector
+    integer, parameter :: Ni = 256**3!128**3!64*64*64  ! dimension of the initial data vector
 
       ! Make large arrays allocatable
       double precision, allocatable :: Din(:), Ein(:), Sin(:), Win(:), Vin(:)
@@ -89,6 +89,9 @@ do I = 1, Ni
     shea(I) = X(3)!/InD(9)
     weyl(I) = X(4)
     Vol(I)    = X(5)
+    if(I<2.097152d6) then
+        print *, I/2.097152d6
+    end if
 end do
 !$OMP END PARALLEL DO
 
@@ -151,10 +154,10 @@ end do
 !	do I=1,Ni
 !	Din(I) = -0.00095+0.000001*I
 !	enddo
-        open(unit=10, file="../data/ics/rho_i_new", status="old", action="read")
+        open(unit=10, file="../data/ics/rho_i_newnew", status="old", action="read")
             do i = 1, Ni
                 read(10, *) Din(i)
-                Din(i) = Din(i)-1.0
+                Din(i) = Din(i)!-1.0
         end do
         close(10)
 
@@ -178,7 +181,7 @@ end do
         close(13)
     end if
 
-        open(unit=14, file="../data/ics/V_i_new", status="old", action="read")
+        open(unit=14, file="../data/ics/V_i_newnew", status="old", action="read")
         do i = 1, Ni
             read(14, *) Vin(i)
         end do

@@ -1,13 +1,12 @@
 from initial_conditions.generate_ic import *
 from initial_conditions.read_params import *
-# call_julia.py
 import os
 os.environ["JULIA_NUM_THREADS"] = "8"  # number of threads you want
 from julia import Julia
 jl = Julia(compiled_modules=False)
 from julia import Main
 Main.include("jusilun/jusilun.jl")
-#Main.include("jusilun/juicebrik.jl")
+
 N_grid = 256
 filename = "./initial_conditions/ngenic.param"  # path to your .param file
 
@@ -39,12 +38,13 @@ for _ in range(1):
     run_class(class_dict, params['Redshift'])
     dens_contrast(params['Nmesh'])
 
+
     # Call julia
-#    Main.jusilun(params['Nmesh'],
-#                 params['HubbleParam']*100,
-#                 params['Omega'],
-#                 params['OmegaLambda'],
-#                 params['Redshift'])
+    Main.jusilun(params['Nmesh'],
+                 params['HubbleParam']*100,
+                 params['Omega'],
+                 params['OmegaLambda'],
+                 params['Redshift'])
 
 #from plot import *
 #plot_grid(params['Nmesh'])

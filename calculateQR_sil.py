@@ -72,3 +72,10 @@ print("Omega_t_f =", -final["Q"]/(6*final["H"]**2) -
       Lambda(initial["Omega_Lambda"], 0.7)/(3*final["H"]**2) +
       np.sum(final["rho"]*final["V"])/np.sum(final["V"])/(3*final["H"]**2))
 print("H", final["H"])
+
+
+
+print("/n/n/n For Chatty:")
+print("H final =", final["H"])
+print("R final =", final["R"])
+print("R/H^2 =", final["R"]/final["H"]**2)

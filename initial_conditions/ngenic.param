@@ -5,7 +5,7 @@
 Nmesh = 256 
 
 # Random seed for modes in phase realisation
-Seed = 272946 
+Seed = 609854 
 
 # Periodic box size of simulation
 Box = 256000
