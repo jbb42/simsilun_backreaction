@@ -1,7 +1,7 @@
 from initial_conditions.generate_ic import *
 from initial_conditions.read_params import *
 import os
-os.environ["JULIA_NUM_THREADS"] = "8"  # number of threads you want
+os.environ["JULIA_NUM_THREADS"] = "16"  # number of threads you want
 from julia import Julia
 jl = Julia(compiled_modules=False)
 from julia import Main
@@ -37,7 +37,7 @@ for _ in range(10):
                            'tau_reio' :0.054,
                            'z_pk': params['Redshift'],
                            'output': 'mPk,dTk' ,
-                           'P_k_max_h/Mpc': 1000,  # extend upper range if needed
+                           'P_k_max_h/Mpc': 200,  # extend upper range if needed
                        }
 
             run_class(class_dict, params['Redshift'])

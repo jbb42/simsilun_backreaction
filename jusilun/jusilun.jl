@@ -1,3 +1,5 @@
+import Pkg; Pkg.add("NPZ")
+import Pkg; Pkg.add("PyCall")
 using NPZ
 using Base.Threads
 println("nthreads() = ", nthreads())

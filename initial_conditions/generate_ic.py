@@ -3,61 +3,57 @@ import subprocess
 from classy import Class
 from pygadgetreader import readsnap, readheader
 
-def run_class(dict, z):
 
-    # create instance of the class "Class"
+def run_class(class_dict, z):
+    """
+    Run CLASS, save transfer functions and P(k), safely handling the maximum k to avoid out-of-bounds errors.
+    """
+    # --- Initialize CLASS ---
     cosmo = Class()
-    # pass input parameters
-    cosmo.set(dict)
-    # run class
+    cosmo.set(class_dict)
     cosmo.compute()
-    # --- extract transfer functions ---
-    transfers = cosmo.get_transfer(z)
 
-    # k in h/Mpc
+    # --- Extract transfer functions ---
+    transfers = cosmo.get_transfer(z)
     k_hMpc = np.array(transfers["k (h/Mpc)"])
-    h = cosmo.h()  # reduced Hubble
+    h = cosmo.h()
     k_Mpc = k_hMpc * h  # convert to 1/Mpc
 
-    # species you want to save
+    # --- Rescale transfer functions ---
     species = ["d_cdm", "d_b", "d_g", "d_ur", "d_ncdm", "d_tot"]
-
     Tk_rescaled = {}
     for sp in species:
-        if sp in transfers:          # CLASS actually returned this species
+        if sp in transfers:
             Ti = np.array(transfers[sp])
             Tk_rescaled[sp] = -Ti / (k_Mpc**2)
-        else:                        # species missing -> fill zeros
+        else:
             print(f"WARNING: species {sp} not found in CLASS output")
             Tk_rescaled[sp] = np.zeros_like(k_Mpc)
 
-    # --- save in CAMB-like format ---
-    header = (
-        f"k [h/Mpc]  " + "  ".join([f"-T_{sp}/k^2" for sp in species])
-    )
+    # --- Save Tk table in CAMB-like format ---
+    header = f"k [h/Mpc]  " + "  ".join([f"-T_{sp}/k^2" for sp in species])
     data = np.column_stack([k_hMpc] + [Tk_rescaled[sp] for sp in species])
-    np.savetxt(f"./data/ics/tk.dat", data, header=header)
-
+    np.savetxt("./data/ics/tk.dat", data, header=header)
     print(f"Saved Tk table with {len(k_hMpc)} k-modes at z={z}")
 
-    # after your existing get_transfer() call
-    k_hMpc = np.array(transfers["k (h/Mpc)"])
-    h = cosmo.h()
+    # --- P(k) safely below k_max ---
+    k_hMpc_safe = k_hMpc.copy()
+    k_hMpc_safe[-1] *= 0.999  # reduce last k by 0.1% as buffer
 
-    # P(k) in (Mpc/h)^3, same k-grid
-    Pk = np.array([cosmo.pk(k * h, z) * h**3 for
-                   k in k_hMpc])
+    Pk = np.array([cosmo.pk(k * h, z) * h**3 for k in k_hMpc_safe])
+    data_pk = np.column_stack([k_hMpc_safe, Pk])
+    np.savetxt("./data/ics/pk.dat", data_pk)
+    print(f"Saved Pk table with {len(k_hMpc_safe)} k-modes at z={z}")
 
-    data = np.column_stack([k_hMpc] + [Pk])
-    np.savetxt(f"./data/ics/pk.dat", data)
-
-    print(f"Saved Tk table with {len(k_hMpc)} k-modes at z={z}")
-
+    # --- Run N-GenIC ---
     param_path = "../ngenic.param"  # relative to S-GenIC folder
     subprocess.run(
         ["mpiexec", "-np", "1", "./N-GenIC", param_path],
         cwd="initial_conditions/S-GenIC",
     )
+
+    # --- Cleanup ---
+    cosmo.empty()
     return
 
 def dens_contrast(grid_size):
