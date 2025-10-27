@@ -33,9 +33,9 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
         return sum(arr.*V) / sum(V)
     end
 
-    Q = 2 / 3 * (gm(Θ_vec.^2) - gm(Θ_vec)^2) - 2 * gm(Σ_vec.^2)
-    R = 2*gm(ρ_vec) + 6*gm(Σ_vec.^2) - 2/3*gm(Θ_vec.^2) + 2*Λ
-    H = sum(Θ_vec.*V_vec)/sum(V_vec)/3
+    #Q = 2 / 3 * (gm(Θ_vec.^2) - gm(Θ_vec)^2) - 2 * gm(Σ_vec.^2)
+    #R = 2*gm(ρ_vec) + 6*gm(Σ_vec.^2) - 2/3*gm(Θ_vec.^2) + 2*Λ
+    #H = sum(Θ_vec.*V_vec)/sum(V_vec)/3
 
     basepath = "./data/jusilun_output/initial_vals"
     i = 0
@@ -53,10 +53,10 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
         "H_0" => H_0_km_s_Mpc,
         "Omega_m" => Ω_m,
         "Omega_Lambda" => Ω_Λ,
-        "z_i" => z_i,
-        "Q" => Q,
-        "R" => R,
-        "H" => H
+        "z_i" => z_i#,
+        #"Q" => Q,
+        #"R" => R,
+        #"H" => H
     ))
 
     # RK4 step
@@ -131,9 +131,9 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
 
     ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec = evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ=Λ)
 
-    Q = 2 / 3 * (gm(Θ_vec.^2) - gm(Θ_vec)^2) - 2 * gm(Σ_vec.^2)
-    R = 2*gm(ρ_vec) + 6*gm(Σ_vec.^2) - 2/3*gm(Θ_vec.^2) + 2*Λ
-    H = sum(Θ_vec.*V_vec)/sum(V_vec)/3
+    #Q = 2 / 3 * (gm(Θ_vec.^2) - gm(Θ_vec)^2) - 2 * gm(Σ_vec.^2)
+    #R = 2*gm(ρ_vec) + 6*gm(Σ_vec.^2) - 2/3*gm(Θ_vec.^2) + 2*Λ
+    #H = sum(Θ_vec.*V_vec)/sum(V_vec)/3
     
     basepath = "./data/jusilun_output/final_vals"
     i = 0
@@ -151,9 +151,9 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
         "H_0" => H_0_km_s_Mpc,
         "Omega_m" => Ω_m,
         "Omega_Lambda" => Ω_Λ,
-        "z_i" => z_i,
-        "Q" => Q,
-        "R" => R,
-        "H" => H
+        "z_i" => z_i#,
+        #"Q" => Q,
+        #"R" => R,
+        #"H" => H
     ))
 end

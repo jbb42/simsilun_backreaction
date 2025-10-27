@@ -2,10 +2,10 @@
 # This is the size of the FFT grid used to
 # compute the displacement field. One
 # should have Nmesh >= Npart.
-Nmesh = 256 
+Nmesh = 64 
 
 # Random seed for modes in phase realisation
-Seed = 609854 
+Seed = 489221 
 
 # Periodic box size of simulation
 Box = 256000
@@ -37,9 +37,9 @@ FileWithTransfer = ../../data/ics/tk.dat
 
 # (Cube root of) number of particles
 # Baryons (type 0)
-NBaryon = 256 
+NBaryon = 64 
 # CDM (type 1)
-NCDM = 256 
+NCDM = 64 
 # Neutrinos (type 2)
 NNeutrino = 0
 
