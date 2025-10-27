@@ -2,6 +2,26 @@ using NPZ
 using Base.Threads
 println("nthreads() = ", nthreads())
 
+
+function f2(x)
+    y = round(x, digits=2)
+    s = string(y)
+    if occursin(".", s)
+        decs = split(s, ".")[2]
+        if length(decs) == 1
+            s *= "0"      # e.g. "0.2" → "0.20"
+        end
+    else
+        s *= ".00"        # e.g. "1" → "1.00"
+    end
+    return s
+end
+
+
+function gm(arr, V=V_vec)
+    return sum(arr.*V) / sum(V)
+end
+
 function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
     # Simsilun units
     mu = 1.989e45   # 10^15 solar masses
@@ -29,20 +49,16 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
     W_vec = .-(ρ_bg_i .* δ_i) ./ 6
     V_vec = ones(length(ρ_vec))  # CHANGE THIS
 
-    function gm(arr, V=V_vec)
-        return sum(arr.*V) / sum(V)
-    end
-
     #Q = 2 / 3 * (gm(Θ_vec.^2) - gm(Θ_vec)^2) - 2 * gm(Σ_vec.^2)
     #R = 2*gm(ρ_vec) + 6*gm(Σ_vec.^2) - 2/3*gm(Θ_vec.^2) + 2*Λ
     #H = sum(Θ_vec.*V_vec)/sum(V_vec)/3
 
-    basepath = "./data/jusilun_output/initial_vals"
-    i = 0
-    filename = basepath * "_" * lpad(string(i), 3, '0') * ".npz"
+    basepath = "./data/jusilun_output/i_m$(f2(Ω_m))_L$(f2(Ω_Λ))"
+    file_num = 0
+    filename = basepath * "_n" * lpad(string(file_num), 2, '0') * ".npz"
     while isfile(filename)
-        i += 1
-        filename = basepath * "_" * lpad(string(i), 3, '0') * ".npz"
+        file_num += 1
+        filename = basepath * "_n" * lpad(string(file_num), 2, '0') * ".npz"
     end
     npzwrite(filename, Dict(
         "rho" => ρ_vec,
@@ -135,13 +151,9 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
     #R = 2*gm(ρ_vec) + 6*gm(Σ_vec.^2) - 2/3*gm(Θ_vec.^2) + 2*Λ
     #H = sum(Θ_vec.*V_vec)/sum(V_vec)/3
     
-    basepath = "./data/jusilun_output/final_vals"
-    i = 0
-    filename = basepath * "_" * lpad(string(i), 3, '0') * ".npz"
-    while isfile(filename)
-        i += 1
-        filename = basepath * "_" * lpad(string(i), 3, '0') * ".npz"
-    end
+    basepath = "./data/jusilun_output/f_m$(f2(Ω_m))_L$(f2(Ω_Λ))"
+    filename = basepath * "_n" * lpad(string(file_num), 2, '0') * ".npz"
+
     npzwrite(filename, Dict(
         "rho" => ρ_vec,
         "theta" => Θ_vec,

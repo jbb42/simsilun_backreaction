@@ -5,7 +5,7 @@
 Nmesh = 64 
 
 # Random seed for modes in phase realisation
-Seed = 489221 
+Seed = 587733 
 
 # Periodic box size of simulation
 Box = 256000
@@ -16,9 +16,9 @@ FileBase = ICs
 OutputDir = ../../data/ics/
 
 # Total matter density  (at z=0)
-Omega = 1 
+Omega = 0.2 
 # Cosmological constant (at z=0)
-OmegaLambda = 0 
+OmegaLambda = 0.62 
 # Baryon density        (at z=0)
 OmegaBaryon = 0.0472
 # Hubble parameter (may be used for power spec parameterization)
