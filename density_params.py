@@ -25,13 +25,12 @@ def get_omegas(data):
     V = data["V"]
     H = gm(theta, V)/3
     Omega_m = gm(rho, V)/(3*H**2)
-    Omega_Q = (gm(sigma**2, V)+1/9*gm(theta**2, V)-H**2)/H**2
-    R = 2*gm(rho, V) + 6*gm(sigma**2, V) - 2/3*gm(theta**2, V) + 2*Lambda(data["Omega_Lambda"], data["H_0"])
-    Omega_K = -R/(6*H**2)
+    Omega_Q = (gm(sigma**2, V)-1/9*gm(theta**2, V)+H**2)/H**2 # Notice different sign on theta terms!
+    Omega_K = (-1/3*gm(rho, V) - gm(sigma**2, V) + 1/9*gm(theta**2, V) - 1/3*Lambda(data["Omega_Lambda"], data["H_0"]))/H**2
     Omega_L = Lambda(data["Omega_Lambda"], data["H_0"])/(3*H**2)
     return Omega_m, Omega_Q, Omega_K, Omega_L, H
 
-for i in range(44):
+for i in range(50):
     print("\nFile number:", i)
     initial = np.load(f"./data/jusilun_output/initial_vals_{str(i).zfill(3)}.npz")
     print("Omega_m =", initial["Omega_m"],
@@ -55,8 +54,3 @@ for i in range(44):
     print(f"Omega_Q_f = {Omega_Q:.5f}")
     print(f"Omega_K_f = {Omega_K:.5f}")
     print(f"Omega_T_f = {Omega_m + Omega_L + Omega_Q + Omega_K:.5f}\n")
-
-
-
-
-

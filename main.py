@@ -7,7 +7,7 @@ jl = Julia(compiled_modules=False)
 from julia import Main
 Main.include("jusilun/jusilun.jl")
 
-N_grid = 256
+N_grid = 64
 filename = "./initial_conditions/ngenic.param"  # path to your .param file
 
 for _ in range(1):
@@ -35,9 +35,16 @@ for _ in range(1):
                    'P_k_max_h/Mpc': 300,  # extend upper range if needed
                }
 
-    run_class(class_dict, params['Redshift'])
-    dens_contrast(params['Nmesh'])
-
+    #run_class(class_dict, params['Redshift'])
+    #dens_contrast(params['Nmesh'])
+    delta = np.load("/home/jbb/Downloads/delta.npy")
+    print(delta.shape)
+    N = 256
+    block = 4
+    new_N = N // block
+    delta = delta.reshape(new_N, block, new_N, block, new_N, block).mean(axis=(1, 3, 5))*64
+    print(delta)
+    np.save("./data/ics/delta.npy", delta)
 
     # Call julia
     Main.jusilun(params['Nmesh'],
