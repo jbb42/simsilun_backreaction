@@ -4,6 +4,7 @@ classy
 scipy
 matplotlib
 julia
+pycall
 
 # Install pygadgetreader from GitHub (latest main branch)
 pygadgetreader @ git+https://github.com/jveitchmichaelis/pygadgetreader.git
