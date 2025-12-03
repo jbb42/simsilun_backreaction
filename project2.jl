@@ -126,6 +126,10 @@ A = Array(sol(t_steps))[1:length(r), :]
 A_r = Array(sol(t_steps))[length(r)+1:2*length(r), :]
 A_rr = Array(sol(t_steps))[2*length(r)+1:3*length(r), :]
 
+A_t = @. sqrt(p[1] + p[2]/A + p[3]*A^2)
+A_tr = @. (p[4]/A - (p[5]*A_r)/(A^2) + p[6] + p[7]*A*A_r) / (2 * A_t)
+A_trr = @. ( (p[8] + p[9]/A + (p[10]*A_r)/(A^2) + (p[11]*A_r^2)/(A^3) - (p[5]*A_rr)/(A^2) + p[7]*A_r^2 + p[7]*A*A_rr) - 2*A_tr^2 ) / (2 * A_t)
+
 # Calculate Rho (This line works because @. handles the broadcasting automatically)
 rho = @. (c^2 / (4*pi*G_N)) * (M_r(r) / (A^2 * A_r))
 
@@ -193,3 +197,40 @@ plot_matrix(A_rr ./ (a.(t_steps)'), t_steps, r, r_b, "second_derived_radial_prof
     ylabel = L"A''(t,r)/ar",
     legend_pos = :topleft
 )
+
+
+
+
+function kodes!()
+    # ... setup aliases ...
+    dt = k_t
+    dr = k_r
+    dtheta = k_theta
+    dphi = k_phi
+    
+    # Pre-calculate terms for clarity/speed
+    # Assumes c is defined globally or passed in p
+    
+    # 1. Time Component (needs 1/c^2 factors if t is physical time)
+    # Gamma^t_rr = (A_r * A_tr) / (c^2 * (1-k))
+    # Gamma^t_thth = (A * A_t) / c^2
+    @. dk_t = -(A_tr*A_r)/(c^2*(1-k(r))) * dr^2 - (A*A_t)/c^2 * dtheta^2 - (A*A_t*sin(theta)^2)/c^2 * dphi^2
+
+    # 2. Radial Component
+    # Gamma^r_tr = A_tr / A_r
+    # Gamma^r_rr = A_rr/A_r + k_r / 2(1-k)
+    # Gamma^r_thth = - A(1-k)/A_r
+    @. dk_r = - 2*(A_tr/A_r) * dt*dr - (A_rr/A_r + k_r(r)/(2-2*k(r))) * dr^2 + (A/A_r)*(1-k(r)) * dtheta^2 + (A/A_r)*(1-k(r))*sin(theta)^2 * dphi^2
+
+    # 3. Theta Component
+    # Gamma^th_t_th = A_t / A
+    # Gamma^th_r_th = A_r / A
+    # Gamma^th_ph_ph = -sin(th)cos(th)
+    @. dk_theta = - 2*(A_t/A) * dt*dtheta - 2*(A_r/A) * dr*dtheta + cos(theta)*sin(theta) * dphi^2
+
+    # 4. Phi Component
+    # Gamma^ph_t_ph = A_t / A
+    # Gamma^ph_r_ph = A_r / A
+    # Gamma^ph_th_ph = cot(th)
+    @. dk_phi = - 2*(A_t/A) * dt*dphi - 2*(A_r/A) * dr*dphi - 2*(cos(theta)/sin(theta)) * dtheta*dphi
+end
