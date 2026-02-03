@@ -10,10 +10,13 @@ Main.include("jusilun/jusilun.jl")
 N_grid = 64
 filename = "./initial_conditions/ngenic.param"  # path to your .param file
 
-oms = [0.2 + 0.02 * i for i in range(11)]
-ols = [0.6 + 0.02 * i for i in range(11)]
+#oms = [0.2 + 0.02 * i for i in range(11)]
+#ols = [0.6 + 0.02 * i for i in range(11)]
 
-for _ in range(10):
+oms = [0.3]
+ols = [0.7]
+for _ in range(1):
+#for _ in range(10):
     for om in oms:
         for ol in ols:
             new_values = dict(HubbleParam=0.70,
@@ -58,5 +61,5 @@ for _ in range(10):
                          params['OmegaLambda'],
                          params['Redshift'])
 
-#from plot import *
-#plot_grid(params['Nmesh'])
+from plot import *
+plot_grid(params['Nmesh'])

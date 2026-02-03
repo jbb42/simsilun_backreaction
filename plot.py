@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_grid(g_size):
-    initial = np.load("./data/jusilun_output/initial_vals_043.npz")
-    final = np.load("./data/jusilun_output/final_vals_043.npz")
+    initial = np.load("./data/jusilun_output/i_m0.30_L0.70_n00.npz")
+    final = np.load("./data/jusilun_output/f_m0.30_L0.70_n00.npz")
     rho_i = initial["rho"]
     rho_i_bg = rho_i[-1]
     rho_i = rho_i[:-1].reshape(g_size,g_size,g_size)
@@ -16,11 +16,13 @@ def plot_grid(g_size):
     plt.figure()
     plt.imshow(rho_i[:,:,g_size//2]/rho_i_bg)
     plt.colorbar()
+    plt.savefig("initial_density_slice.png")
     plt.show()
 
     plt.figure()
     plt.imshow(rho_f[:,:,g_size//2]/rho_f_bg)
     plt.colorbar()
+    plt.savefig("final_density_slice.png")
     plt.show()
     return
-plot_grid(128)
+plot_grid(64)
