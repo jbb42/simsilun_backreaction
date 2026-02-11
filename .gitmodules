@@ -4,6 +4,3 @@
 [submodule "initial_conditions/S-GenIC"]
 	path = initial_conditions/S-GenIC
 	url = https://github.com/sbird/S-GenIC.git
-[submodule "initial_conditions/initial_conditions/S-GenIC"]
-	path = initial_conditions/initial_conditions/S-GenIC
-	url = https://github.com/sbird/S-GenIC.git
