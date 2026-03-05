@@ -121,7 +121,7 @@ function jusilun(g_size, H_0_km_s_Mpc, Ω_m, Ω_Λ, z_i)
 
     # Evolve universe until <H> = H_0
     function evolve!(ρ_vec, Θ_vec, Σ_vec, W_vec, V_vec; Λ)
-        frozen = falses(length(ρ_vec))
+        frozen = zeros(Bool, length(ρ_vec))
         H_avg = sum(Θ_vec.*V_vec)/sum(V_vec)/3
         step = 0
         while H_avg >= H_0/c
