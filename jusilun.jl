@@ -1,13 +1,8 @@
-import Pkg
 using NPZ
 using FFTW
 using Random
 using DelimitedFiles
 using Interpolations
-using LinearAlgebra
-using Printf
-using Base.Threads
-using Plots
 using DifferentialEquations
 
 #====================================================================#
@@ -23,7 +18,7 @@ const c = 306.5926758      # Speed of light [Mpc/Gyr]
 const κ = 8*pi*G/c^4
 
 # Ensure output directories exist
-mkpath("./data/jusilun_output")
+mkpath("./output_data")
 mkpath("./initial_conditions")
 
 #====================================================================#
@@ -210,7 +205,7 @@ end
 # Solve ODEs
 #====================================================================#
 
-function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0)
+function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0, headless=true)
     δ = get_δ(Ωm, ΩΛ, Ωk, h, seed, id; N=N, Lbox=Lbox, zi=zi)
     H0 = h * 1.0227e-1 # Hubble constant in 1/Gyr
     Λ = 3ΩΛ * H0^2 / c^2 # Cosmological constant in 1/Mpc^2
@@ -234,7 +229,6 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0)
     end
 
     t_end, (ρ_bg_f, Θ_bg_f, _, _, _) = find_t_end(u0_bg, H0, Λ)
-    println("Background reaches H=H₀ at t = $(round(t_end, digits=4)) Gyr")
 
     p = (Λ=Λ, active=fill(true, size(δ)...))
     prob = ODEProblem(simsilun_ode!, u0, (0.0, t_end), p)
@@ -246,12 +240,29 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0)
     # Calculate Buchert averaged density parameters at initial and final times
     Ωi = buchert(u0, Λ)
     Ωf = buchert(sol.u[end], Λ)
-
-
-    # Reshape final state into 5 × N grid and return as tuple of arrays
-    return eachslice(reshape(u_final, 5, size(δ)...), dims=1), (ρ_bg_f, Θ_bg_f), (Ωi, Ωf)
+    
+    # Write parameters to file
+    npzwrite("./output_data/$id.npz", Dict(
+        "rho" => reshape(view(u_final, 1, :), size(δ)...),        "rho_bg_f" => ρ_bg_f,
+        "Theta_bg_f" => Θ_bg_f,
+        
+        # Flatten initial parameters
+        "Omega_m_i" => Ωi.Ωm,
+        "Omega_L_i" => Ωi.ΩΛ,
+        "Omega_Q_i" => Ωi.ΩQ,
+        "Omega_k_i" => Ωi.ΩK,
+        "H_i"       => Ωi.H,
+        
+        # Flatten final parameters
+        "Omega_m_f" => Ωf.Ωm,
+        "Omega_L_f" => Ωf.ΩΛ,
+        "Omega_Q_f" => Ωf.ΩQ,
+        "Omega_k_f" => Ωf.ΩK,
+        "H_f"       => Ωf.H
+    ))
+    if headless == true
+        return nothing
+    else
+        return return eachslice(reshape(sol.u[end], 5, size(δ)...), dims=1), (ρ_end, Θ_end), (Ωi, Ωf)
+    end
 end
-
-@time (ρ, Θ, Σ, W, V), (ρ_bg_f, Θ_bg_f), (Ωi, Ωf) = jusilun(0.3, 0.7, 0.0, 0.7, 42, "test"; N=64, Lbox=256.0, zi=90.0)
-
-heatmap(ρ[:,:,32]/ρ_bg_f, title="Density at z=0", xlabel="X", ylabel="Y", colorbar_title="ρ [M_sun/Mpc^3]")
