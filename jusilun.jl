@@ -243,7 +243,8 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0, headles
     
     # Write parameters to file
     npzwrite("./output_data/$id.npz", Dict(
-        "rho" => reshape(view(u_final, 1, :), size(δ)...),        "rho_bg_f" => ρ_bg_f,
+        "rho" => reshape(view(u_final, 1, :), size(δ)...),
+        "rho_bg_f" => ρ_bg_f,
         "Theta_bg_f" => Θ_bg_f,
         
         # Flatten initial parameters
@@ -263,6 +264,6 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0, headles
     if headless == true
         return nothing
     else
-        return return eachslice(reshape(sol.u[end], 5, size(δ)...), dims=1), (ρ_end, Θ_end), (Ωi, Ωf)
+        return eachslice(reshape(sol.u[end], 5, size(δ)...), dims=1), (ρ_bg_f, Θ_bg_f), (Ωi, Ωf)
     end
 end

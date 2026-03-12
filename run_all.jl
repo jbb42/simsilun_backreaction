@@ -16,7 +16,7 @@ println("Starting parameter sweep with $(length(all_jobs)) total runs...")
 
 # Thread over the independent runs
 Threads.@threads for (h, Ωm, ΩΛ, run_idx) in all_jobs
-    Ωk = 1.0 - Ωm - ΩΛ 
+    Ωk = round(1.0 - Ωm - ΩΛ, digits=5) # Ensure Ωk is consistent and avoid floating-point issues
     
     # Use run_idx to ensure unique file names for CLASS and the output
     run_id = @sprintf("h%.2d_m%.2d_L%.2d_run%02d", h*100, Ωm*100, ΩΛ*100, run_idx)    
