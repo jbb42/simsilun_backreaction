@@ -211,9 +211,9 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0, headles
     Λ = 3ΩΛ * H0^2 / c^2 # Cosmological constant in 1/Mpc^2
 
     # Initial conditions for background and grid
-    ρ_bg = 3Ωm * H0^2 / c^2 * (1 + zi)^3 # Initial background density
-    Θ_bg = 3 * H0 / c * sqrt(Ωm * (1 + zi)^3 + ΩΛ) # Initial background expansion rate
-    u0_bg = [ρ_bg, Θ_bg, 0.0, 0.0, 1.0]
+    ρ_i = 3Ωm * H0^2 / c^2 * (1 + zi)^3 # Initial background density
+    Θ_i = 3 * H0 / c * sqrt(Ωm * (1 + zi)^3 + ΩΛ) # Initial background expansion rate
+    u0_bg = [ρ_i, Θ_i, 0.0, 0.0, 1.0]
 
     # Pre-allocate a 5 × N_cells matrix for initial conditions
     u0 = Matrix{Float64}(undef, 5, length(δ))
@@ -221,14 +221,14 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0, headles
     # Fill the initial conditions
     @inbounds for i in eachindex(δ)
         δ_val = δ[i]
-        u0[1, i] = ρ_bg * (1 + δ_val)           # Density ρ
-        u0[2, i] = Θ_bg * (1 - δ_val / 3)       # Expansion rate Θ
-        u0[3, i] = Θ_bg * δ_val / 9             # Shear Σ
-        u0[4, i] = -ρ_bg * δ_val / 6            # Weyl curvature W
-        u0[5, i] = 1.0                          # Volume element V
+        u0[1, i] = ρ_i * (1 + δ_val)           # Density ρ
+        u0[2, i] = Θ_i * (1 - δ_val / 3)       # Expansion rate Θ
+        u0[3, i] = Θ_i * δ_val / 9             # Shear Σ
+        u0[4, i] = -ρ_i * δ_val / 6            # Weyl curvature W
+        u0[5, i] = 1.0 / (1 + δ_val)           # Volume element V (from mass conservation)
     end
-
-    t_end, (ρ_bg_f, Θ_bg_f, _, _, _) = find_t_end(u0_bg, H0, Λ)
+    println("delta min and max: ", minimum(δ), " ", maximum(δ))
+    t_end, (ρ_f, Θ_f, _, _, _) = find_t_end(u0_bg, H0, Λ)
 
     p = (Λ=Λ, active=fill(true, size(δ)...))
     prob = ODEProblem(simsilun_ode!, u0, (0.0, t_end), p)
@@ -241,29 +241,33 @@ function jusilun(Ωm, ΩΛ, Ωk, h, seed, id; N=64, Lbox=256.0, zi=90.0, headles
     Ωi = buchert(u0, Λ)
     Ωf = buchert(sol.u[end], Λ)
     
-    # Write parameters to file
-    npzwrite("./output_data/$id.npz", Dict(
-        "rho" => reshape(view(u_final, 1, :), size(δ)...),
-        "rho_bg_f" => ρ_bg_f,
-        "Theta_bg_f" => Θ_bg_f,
-        
-        # Flatten initial parameters
-        "Omega_m_i" => Ωi.Ωm,
-        "Omega_L_i" => Ωi.ΩΛ,
-        "Omega_Q_i" => Ωi.ΩQ,
-        "Omega_k_i" => Ωi.ΩK,
-        "H_i"       => Ωi.H,
-        
-        # Flatten final parameters
-        "Omega_m_f" => Ωf.Ωm,
-        "Omega_L_f" => Ωf.ΩΛ,
-        "Omega_Q_f" => Ωf.ΩQ,
-        "Omega_k_f" => Ωf.ΩK,
-        "H_f"       => Ωf.H
-    ))
     if headless == true
+        println("Initial parameters: ", Ωi)
+        println("Final parameters: ", Ωf)
+        # Write parameters to file
+        npzwrite("./output_data/$id.npz", Dict(
+            "rho" => reshape(view(u_final, 1, :), size(δ)...),
+            "rho_bg_f" => ρ_f,
+            "Theta_bg_f" => Θ_f,
+            
+            # Flatten initial parameters
+            "Omega_m_i" => Ωi.Ωm,
+            "Omega_L_i" => Ωi.ΩΛ,
+            "Omega_Q_i" => Ωi.ΩQ,
+            "Omega_k_i" => Ωi.ΩK,
+            "H_i"       => Ωi.H,
+            
+            # Flatten final parameters
+            "Omega_m_f" => Ωf.Ωm,
+            "Omega_L_f" => Ωf.ΩΛ,
+            "Omega_Q_f" => Ωf.ΩQ,
+            "Omega_k_f" => Ωf.ΩK,
+            "H_f"       => Ωf.H
+        ))
         return nothing
     else
-        return eachslice(reshape(sol.u[end], 5, size(δ)...), dims=1), (ρ_bg_f, Θ_bg_f), (Ωi, Ωf)
+        return eachslice(reshape(sol.u[end], 5, size(δ)...), dims=1), (ρ_f, Θ_f), (Ωi, Ωf)
     end
 end
+
+jusilun(0.3, 0.7, 0.0, 0.7, 12345, "test"; N=64, Lbox=256.0, zi=90, headless=true);
